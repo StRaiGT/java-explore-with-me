@@ -1,4 +1,4 @@
-package ru.practicum.stats_dto;
+package ru.practicum.stats_common.model;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -12,8 +12,17 @@ import lombok.experimental.FieldDefaults;
 @Setter
 @Builder
 @AllArgsConstructor
-public class HitDtoResponse {
+public class ViewStats {
     String app;
     String uri;
     Long hits;
+
+    @Override
+    public String toString() {
+        return "ViewStats{" +
+                "app='" + app + '\'' +
+                ", uri='" + uri + '\'' +
+                ", hits=" + hits +
+                '}';
+    }
 }
