@@ -1,4 +1,4 @@
-package ru.practicum.client;
+package ru.practicum.stats_client;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

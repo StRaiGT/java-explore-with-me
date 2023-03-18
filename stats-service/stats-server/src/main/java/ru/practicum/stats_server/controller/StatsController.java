@@ -1,4 +1,4 @@
-package ru.practicum.stats_service.controller;
+package ru.practicum.stats_server.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,10 +10,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import ru.practicum.stats_common.CommonUtils;
 import ru.practicum.stats_common.model.EndpointHit;
 import ru.practicum.stats_common.model.ViewStats;
-import ru.practicum.stats_common.CommonUtils;
-import ru.practicum.stats_service.service.StatsService;
+import ru.practicum.stats_server.service.StatsService;
 
 import javax.validation.Valid;
 import java.time.LocalDateTime;

@@ -1,9 +1,9 @@
-package ru.practicum.stats_service.repository;
+package ru.practicum.stats_server.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import ru.practicum.stats_common.model.ViewStats;
-import ru.practicum.stats_service.model.Stats;
+import ru.practicum.stats_server.model.Stats;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -13,7 +13,7 @@ public interface StatsRepository extends JpaRepository<Stats, Long> {
             "FROM Stats AS s " +
             "WHERE s.timestamp BETWEEN ?1 AND ?2 " +
             "GROUP BY s.app, s.uri " +
-            "ORDER BY COUNT(s.ip) DESC")
+            "ORDER BY COUNT(DISTINCT s.ip) DESC")
     List<ViewStats> getAllStatsDistinctIp(LocalDateTime start, LocalDateTime end);
 
     @Query("SELECT new ru.practicum.stats_common.model.ViewStats(s.app, s.uri, COUNT(s.ip)) " +
@@ -28,7 +28,7 @@ public interface StatsRepository extends JpaRepository<Stats, Long> {
             "WHERE s.timestamp BETWEEN ?1 AND ?2 " +
             "AND s.uri IN (?3) " +
             "GROUP BY s.app, s.uri " +
-            "ORDER BY COUNT(s.ip) DESC")
+            "ORDER BY COUNT(DISTINCT s.ip) DESC")
     List<ViewStats> getStatsByUrisDistinctIp(LocalDateTime start, LocalDateTime end, List<String> uri);
 
     @Query("SELECT new ru.practicum.stats_common.model.ViewStats(s.app, s.uri, COUNT(s.ip)) " +

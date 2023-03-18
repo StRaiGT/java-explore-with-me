@@ -1,9 +1,9 @@
-package ru.practicum.stats_service.mapper;
+package ru.practicum.stats_server.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import ru.practicum.stats_common.model.EndpointHit;
-import ru.practicum.stats_service.model.Stats;
+import ru.practicum.stats_server.model.Stats;
 
 import java.time.LocalDateTime;
 

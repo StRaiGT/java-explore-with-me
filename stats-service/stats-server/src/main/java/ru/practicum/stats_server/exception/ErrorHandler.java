@@ -1,4 +1,4 @@
-package ru.practicum.stats_service.exception;
+package ru.practicum.stats_server.exception;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
