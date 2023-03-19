@@ -31,7 +31,8 @@ public class ErrorHandler {
             DataIntegrityViolationException.class,
             MethodArgumentTypeMismatchException.class,
             IllegalArgumentException.class,
-            MissingServletRequestParameterException.class
+            MissingServletRequestParameterException.class,
+            ClassCastException.class
     })
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleBadRequest(final Throwable exception) {
