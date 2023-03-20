@@ -7,7 +7,7 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.DefaultUriBuilderFactory;
-import ru.practicum.stats_common.CommonUtils;
+import ru.practicum.stats_common.StatsCommonUtils;
 import ru.practicum.stats_common.model.EndpointHit;
 
 import java.time.LocalDateTime;
@@ -33,9 +33,9 @@ public class StatsClient extends BaseClient {
                 .app(appName)
                 .uri(uri)
                 .ip(ip)
-                .timestamp(timestamp.format(CommonUtils.DT_FORMATTER))
+                .timestamp(timestamp.format(StatsCommonUtils.DT_FORMATTER))
                 .build();
-        return post(CommonUtils.HIT_ENDPOINT, endpointHit);
+        return post(StatsCommonUtils.HIT_ENDPOINT, endpointHit);
     }
 
     public ResponseEntity<Object> getStats(LocalDateTime start, LocalDateTime end, List<String> uris) {
@@ -58,10 +58,10 @@ public class StatsClient extends BaseClient {
             throw new IllegalArgumentException("Недопустимый временной промежуток.");
         }
 
-        StringBuilder uriBuilder = new StringBuilder(CommonUtils.STATS_ENDPOINT + "?start={start}&end={end}");
+        StringBuilder uriBuilder = new StringBuilder(StatsCommonUtils.STATS_ENDPOINT + "?start={start}&end={end}");
         Map<String, Object> parameters = Map.of(
-                "start", start.format(CommonUtils.DT_FORMATTER),
-                "end", end.format(CommonUtils.DT_FORMATTER)
+                "start", start.format(StatsCommonUtils.DT_FORMATTER),
+                "end", end.format(StatsCommonUtils.DT_FORMATTER)
         );
 
         if (uris != null && !uris.isEmpty()) {
