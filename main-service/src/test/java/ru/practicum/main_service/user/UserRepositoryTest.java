@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.annotation.DirtiesContext;
@@ -16,6 +17,7 @@ import ru.practicum.main_service.user.repository.UserRepository;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DataJpaTest
@@ -38,6 +40,11 @@ public class UserRepositoryTest {
             .id(3L)
             .email("test3@yandex.ru")
             .name("test name 3")
+            .build();
+    private final User user4 = User.builder()
+            .id(4L)
+            .email(user1.getEmail())
+            .name("test name 4")
             .build();
     private final Integer from = Integer.parseInt(MainCommonUtils.PAGE_DEFAULT_FROM);
     private final Integer size = Integer.parseInt(MainCommonUtils.PAGE_DEFAULT_SIZE);
@@ -96,6 +103,16 @@ public class UserRepositoryTest {
             User userFromRepository1 = usersFromRepository.get(0);
 
             checkResult(user3, userFromRepository1);
+        }
+    }
+
+    @Nested
+    class Save {
+        @Test
+        public void shouldThrowExceptionIfEmailExist() {
+            assertThrows(DataIntegrityViolationException.class, () -> userRepository.save(user4));
+
+            assertTrue(userRepository.findById(user4.getId()).isEmpty());
         }
     }
 

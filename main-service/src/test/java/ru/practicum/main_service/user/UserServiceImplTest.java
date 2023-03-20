@@ -42,7 +42,7 @@ public class UserServiceImplTest {
     private UserMapperImpl userMapper;
 
     @InjectMocks
-    private UserServiceImpl userServiceImpl;
+    private UserServiceImpl userService;
 
     @Captor
     private ArgumentCaptor<User> userArgumentCaptor;
@@ -53,8 +53,8 @@ public class UserServiceImplTest {
             .build();
     private final User user1 = User.builder()
             .id(1L)
-            .email("test1@yandex.ru")
-            .name("test name 1")
+            .email(newUserRequest.getEmail())
+            .name(newUserRequest.getName())
             .build();
     private final User user2 = User.builder()
             .id(2L)
@@ -71,16 +71,11 @@ public class UserServiceImplTest {
         public void shouldCreate() {
             when(userMapper.toUser(any())).thenCallRealMethod();
             when(userMapper.toUserDto(any())).thenCallRealMethod();
-            when(userRepository.save(any()))
-                    .thenReturn(User.builder()
-                            .id(1L)
-                            .email(newUserRequest.getEmail())
-                            .name(newUserRequest.getName())
-                            .build());
+            when(userRepository.save(any())).thenReturn(user1);
 
-            UserDto savedUserDto = userServiceImpl.create(newUserRequest);
+            UserDto savedUserDto = userService.create(newUserRequest);
 
-            assertEquals(1L, savedUserDto.getId());
+            assertEquals(user1.getId(), savedUserDto.getId());
             assertEquals(newUserRequest.getEmail(), savedUserDto.getEmail());
             assertEquals(newUserRequest.getName(), savedUserDto.getName());
 
@@ -103,7 +98,7 @@ public class UserServiceImplTest {
             when(userMapper.toUserDto(any())).thenCallRealMethod();
             when(userRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(user1, user2)));
 
-            List<UserDto> usersDtoFromService = userServiceImpl.getUsers(null, pageable);
+            List<UserDto> usersDtoFromService = userService.getUsers(null, pageable);
 
             assertEquals(2, usersDtoFromService.size());
             checkResult(user1, usersDtoFromService.get(0));
@@ -118,7 +113,7 @@ public class UserServiceImplTest {
             when(userMapper.toUserDto(any())).thenCallRealMethod();
             when(userRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(user1, user2)));
 
-            List<UserDto> usersDtoFromService = userServiceImpl.getUsers(List.of(), pageable);
+            List<UserDto> usersDtoFromService = userService.getUsers(List.of(), pageable);
 
             assertEquals(2, usersDtoFromService.size());
             checkResult(user1, usersDtoFromService.get(0));
@@ -134,7 +129,7 @@ public class UserServiceImplTest {
             when(userRepository.findAllByIdIn(List.of(user1.getId(), user2.getId()), pageable))
                     .thenReturn(new PageImpl<>(List.of(user1, user2)));
 
-            List<UserDto> usersDtoFromService = userServiceImpl.getUsers(List.of(user1.getId(), user2.getId()), pageable);
+            List<UserDto> usersDtoFromService = userService.getUsers(List.of(user1.getId(), user2.getId()), pageable);
 
             assertEquals(2, usersDtoFromService.size());
             checkResult(user1, usersDtoFromService.get(0));
@@ -150,7 +145,7 @@ public class UserServiceImplTest {
             when(userRepository.findAllByIdIn(List.of(user2.getId()), pageable))
                     .thenReturn(new PageImpl<>(List.of(user2)));
 
-            List<UserDto> usersDtoFromService = userServiceImpl.getUsers(List.of(user2.getId()), pageable);
+            List<UserDto> usersDtoFromService = userService.getUsers(List.of(user2.getId()), pageable);
 
             assertEquals(1, usersDtoFromService.size());
             checkResult(user2, usersDtoFromService.get(0));
@@ -164,7 +159,7 @@ public class UserServiceImplTest {
             when(userRepository.findAllByIdIn(List.of(99L), pageable))
                     .thenReturn(new PageImpl<>(List.of()));
 
-            List<UserDto> usersDtoFromService = userServiceImpl.getUsers(List.of(99L), pageable);
+            List<UserDto> usersDtoFromService = userService.getUsers(List.of(99L), pageable);
 
             assertTrue(usersDtoFromService.isEmpty());
 
@@ -178,17 +173,17 @@ public class UserServiceImplTest {
         public void shouldDelete() {
             when(userRepository.findById(user1.getId())).thenReturn(Optional.of(user1));
 
-            userServiceImpl.deleteById(user1.getId());
+            userService.deleteById(user1.getId());
 
             verify(userRepository, times(1)).deleteById(user1.getId());
         }
 
         @Test
         public void shouldThrowExceptionIfNotUserFound() {
-            when(userRepository.findById(user1.getId())).thenReturn(Optional.empty());
+            when(userRepository.findById(99L)).thenReturn(Optional.empty());
 
             NotFoundException exception = assertThrows(NotFoundException.class,
-                    () -> userServiceImpl.deleteById(user1.getId()));
+                    () -> userService.deleteById(99L));
             assertEquals("Пользователя с таким id не существует.", exception.getMessage());
 
             verify(userRepository, never()).deleteById(any());
