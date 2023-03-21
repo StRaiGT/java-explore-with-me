@@ -190,6 +190,33 @@ public class UserServiceImplTest {
         }
     }
 
+    @Nested
+    class GetUserById {
+        @Test
+        public void shouldGet() {
+            when(userRepository.findById(user2.getId())).thenReturn(Optional.of(user2));
+
+            User userFromService = userService.getUserById(user2.getId());
+
+            assertEquals(user2.getId(), userFromService.getId());
+            assertEquals(user2.getName(), userFromService.getName());
+            assertEquals(user2.getEmail(), userFromService.getEmail());
+
+            verify(userRepository, times(1)).findById(user2.getId());
+        }
+
+        @Test
+        public void shouldThrowExceptionIfNotFound() {
+            when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+            NotFoundException exception = assertThrows(NotFoundException.class,
+                    () -> userService.getUserById(99L));
+            assertEquals("Пользователя с таким id не существует.", exception.getMessage());
+
+            verify(userRepository, times(1)).findById(any());
+        }
+    }
+
     private void checkResult(User user, UserDto userDto) {
         assertEquals(user.getId(), userDto.getId());
         assertEquals(user.getName(), userDto.getName());

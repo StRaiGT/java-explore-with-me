@@ -234,6 +234,32 @@ public class CategoryServiceImplTest {
         }
     }
 
+    @Nested
+    class GetCategoryById {
+        @Test
+        public void shouldGet() {
+            when(categoryRepository.findById(category2.getId())).thenReturn(Optional.of(category2));
+
+            Category categoryFromService = categoryService.getCategoryById(category2.getId());
+
+            assertEquals(category2.getId(), categoryFromService.getId());
+            assertEquals(category2.getName(), categoryFromService.getName());
+
+            verify(categoryRepository, times(1)).findById(any());
+        }
+
+        @Test
+        public void shouldThrowExceptionIfIdNotFound() {
+            when(categoryRepository.findById(99L)).thenReturn(Optional.empty());
+
+            NotFoundException exception = assertThrows(NotFoundException.class,
+                    () -> categoryService.getCategoryById(99L));
+            assertEquals("Категории с таким id не существует.", exception.getMessage());
+
+            verify(categoryRepository, times(1)).findById(any());
+        }
+    }
+
     private void checkResult(Category category, CategoryDto categoryDto) {
         assertEquals(category.getId(), categoryDto.getId());
         assertEquals(category.getName(), categoryDto.getName());

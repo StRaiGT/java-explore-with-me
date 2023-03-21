@@ -13,9 +13,9 @@ import java.util.Objects;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
 @Setter
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class ViewStats {
     String app;
     String uri;

@@ -33,7 +33,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public List<CategoryDto> getAll(Pageable pageable) {
-        log.info("Вывод всех категорий.");
+        log.info("Вывод всех категорий с пагинацией {}", pageable);
 
         return categoryRepository.findAll(pageable).stream()
                 .map(categoryMapper::toCategoryDto)
@@ -53,7 +53,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional
     public CategoryDto patch(Long catId, CategoryDto categoryDto) {
-        log.info("Обновление категории с id {}", catId);
+        log.info("Обновление категории с id {} новыми параметрами {}", catId, categoryDto);
 
         categoryRepository.findById(catId)
                 .orElseThrow(() -> new NotFoundException("Категории с таким id не существует."));
@@ -70,9 +70,15 @@ public class CategoryServiceImpl implements CategoryService {
         categoryRepository.findById(catId)
                 .orElseThrow(() -> new NotFoundException("Категории с таким id не существует."));
 
-        //TODO (ПРОВЕРИТЬ ПОСЛЕ ДОБАВЛЕНИЯ СОБЫТИЙ)
-        // если с категорией связано событие, то выбросить  ForbiddenException
-        // плюс добавить тест на это?
+        //TODO добавить интеграционный тест на выброс ForbiddenException, если удалить категорию со связанным событием
         categoryRepository.deleteById(catId);
+    }
+
+    @Override
+    public Category getCategoryById(Long catId) {
+        log.info("Вывод категории с id {}", catId);
+
+        return categoryRepository.findById(catId)
+                .orElseThrow(() -> new NotFoundException("Категории с таким id не существует."));
     }
 }

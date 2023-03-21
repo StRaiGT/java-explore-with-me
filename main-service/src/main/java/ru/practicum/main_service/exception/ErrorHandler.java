@@ -6,17 +6,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import ru.practicum.main_service.MainCommonUtils;
 
-import javax.validation.ValidationException;
+import javax.validation.ConstraintViolationException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeParseException;
-import java.util.Arrays;
+import java.util.Objects;
 
 @RestControllerAdvice
 @Slf4j
@@ -27,25 +27,37 @@ public class ErrorHandler {
         private final String status;
         private final String reason;
         private final String message;
-        private final String error;
+        private final String errors;
         private final String timestamp;
     }
 
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError handleValidationException(final MethodArgumentNotValidException exception) {
+        log.error(exception.toString());
+        return new ApiError(HttpStatus.BAD_REQUEST.name(),
+                "Incorrectly made request.",
+                String.format("Field: %s. Error: %s", Objects.requireNonNull(exception.getFieldError()).getField(),
+                        exception.getFieldError().getDefaultMessage()),
+                getErrors(exception),
+                LocalDateTime.now().format(MainCommonUtils.DT_FORMATTER));
+    }
+
     @ExceptionHandler({
-            ValidationException.class,
-            DateTimeParseException.class,
-            MethodArgumentNotValidException.class,
-            IllegalArgumentException.class,
             MethodArgumentTypeMismatchException.class,
-            MissingServletRequestParameterException.class
+            ConstraintViolationException.class,
+            //TODO
+            //DateTimeParseException.class,
+            //IllegalArgumentException.class,
+            //MissingServletRequestParameterException.class
     })
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handleValidationException(final Throwable exception) {
+    public ApiError handleValidationException(final RuntimeException exception) {
         log.error(exception.toString());
         return new ApiError(HttpStatus.BAD_REQUEST.name(),
                 "Incorrectly made request.",
                 exception.getMessage(),
-                Arrays.toString(exception.getStackTrace()),
+                getErrors(exception),
                 LocalDateTime.now().format(MainCommonUtils.DT_FORMATTER));
     }
 
@@ -56,18 +68,18 @@ public class ErrorHandler {
         return new ApiError(HttpStatus.NOT_FOUND.name(),
                 "The required object was not found.",
                 exception.getMessage(),
-                Arrays.toString(exception.getStackTrace()),
+                getErrors(exception),
                 LocalDateTime.now().format(MainCommonUtils.DT_FORMATTER));
     }
 
-    @ExceptionHandler({DataIntegrityViolationException.class})
+    @ExceptionHandler(DataIntegrityViolationException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError handleDataIntegrityViolationException(final DataIntegrityViolationException exception) {
         log.error(exception.toString());
         return new ApiError(HttpStatus.CONFLICT.name(),
                 "Integrity constraint has been violated.",
                 exception.getMessage(),
-                Arrays.toString(exception.getStackTrace()),
+                getErrors(exception),
                 LocalDateTime.now().format(MainCommonUtils.DT_FORMATTER));
     }
 
@@ -78,7 +90,7 @@ public class ErrorHandler {
         return new ApiError(HttpStatus.CONFLICT.name(),
                 "For the requested operation the conditions are not met.",
                 exception.getMessage(),
-                Arrays.toString(exception.getStackTrace()),
+                getErrors(exception),
                 LocalDateTime.now().format(MainCommonUtils.DT_FORMATTER));
     }
 
@@ -89,7 +101,14 @@ public class ErrorHandler {
         return new ApiError(HttpStatus.INTERNAL_SERVER_ERROR.name(),
                 "Unhandled exception.",
                 exception.getMessage(),
-                Arrays.toString(exception.getStackTrace()),
+                getErrors(exception),
                 LocalDateTime.now().format(MainCommonUtils.DT_FORMATTER));
+    }
+
+    private String getErrors(Exception exception) {
+        StringWriter stringWriter = new StringWriter();
+        PrintWriter printWriter = new PrintWriter(stringWriter);
+        exception.printStackTrace(printWriter);
+        return stringWriter.toString();
     }
 }

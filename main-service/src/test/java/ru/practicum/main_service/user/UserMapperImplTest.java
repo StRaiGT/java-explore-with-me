@@ -7,7 +7,7 @@ import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.practicum.main_service.user.dto.NewUserRequest;
 import ru.practicum.main_service.user.dto.UserDto;
-import ru.practicum.main_service.user.dto.UserDtoShort;
+import ru.practicum.main_service.user.dto.UserShortDto;
 import ru.practicum.main_service.user.mapper.UserMapperImpl;
 import ru.practicum.main_service.user.model.User;
 
@@ -33,7 +33,7 @@ public class UserMapperImplTest {
             .name(user.getName())
             .email(user.getEmail())
             .build();
-    private final UserDtoShort userDtoShort = UserDtoShort.builder()
+    private final UserShortDto userShortDto = UserShortDto.builder()
             .id(user.getId())
             .name(user.getName())
             .build();
@@ -77,18 +77,18 @@ public class UserMapperImplTest {
     }
 
     @Nested
-    class ToUserDtoShort {
+    class ToUserShortDto {
         @Test
         public void shouldReturnUser() {
-            UserDtoShort result = userMapper.toUserDtoShort(user);
+            UserShortDto result = userMapper.toUserShortDto(user);
 
-            assertEquals(userDtoShort.getId(), result.getId());
-            assertEquals(userDtoShort.getName(), result.getName());
+            assertEquals(userShortDto.getId(), result.getId());
+            assertEquals(userShortDto.getName(), result.getName());
         }
 
         @Test
         public void shouldReturnNull() {
-            UserDtoShort result = userMapper.toUserDtoShort(null);
+            UserShortDto result = userMapper.toUserShortDto(null);
 
             assertNull(result);
         }

@@ -9,6 +9,7 @@ import ru.practicum.main_service.user.dto.NewUserRequest;
 import ru.practicum.main_service.user.dto.UserDto;
 import ru.practicum.main_service.exception.NotFoundException;
 import ru.practicum.main_service.user.mapper.UserMapper;
+import ru.practicum.main_service.user.model.User;
 import ru.practicum.main_service.user.repository.UserRepository;
 
 import java.util.List;
@@ -32,7 +33,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserDto> getUsers(List<Long> ids, Pageable pageable) {
-        log.info("Вывод пользователей с id {}", ids);
+        log.info("Вывод пользователей с id {} и пагинацией {}", ids, pageable);
 
         if (ids == null || ids.isEmpty()) {
             return userRepository.findAll(pageable).stream()
@@ -54,5 +55,13 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new NotFoundException("Пользователя с таким id не существует."));
 
         userRepository.deleteById(id);
+    }
+
+    @Override
+    public User getUserById(Long id) {
+        log.info("Вывод пользователя с id {}", id);
+
+        return userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Пользователя с таким id не существует."));
     }
 }
