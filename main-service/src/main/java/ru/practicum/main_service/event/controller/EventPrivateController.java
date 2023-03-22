@@ -15,10 +15,14 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.main_service.MainCommonUtils;
 import ru.practicum.main_service.event.dto.EventFullDto;
+import ru.practicum.main_service.event.dto.EventRequestStatusUpdateRequest;
+import ru.practicum.main_service.event.dto.EventRequestStatusUpdateResult;
 import ru.practicum.main_service.event.dto.EventShortDto;
 import ru.practicum.main_service.event.dto.NewEventDto;
+import ru.practicum.main_service.event.dto.ParticipationRequestDto;
 import ru.practicum.main_service.event.dto.UpdateEventUserRequest;
 import ru.practicum.main_service.event.service.EventService;
+import ru.practicum.main_service.event.service.RequestService;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
@@ -31,6 +35,7 @@ import java.util.List;
 @Validated
 public class EventPrivateController {
     private final EventService eventService;
+    private final RequestService requestService;
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
@@ -65,6 +70,20 @@ public class EventPrivateController {
         return eventService.patchEventByPrivate(userId, eventId, updateEventUserRequest);
     }
 
-    //TODO requests mapping to requestService
+    @GetMapping("/{eventId}/requests")
+    @ResponseStatus(HttpStatus.OK)
+    public List<ParticipationRequestDto> getEventRequestsByEventOwner(
+            @PathVariable Long userId,
+            @PathVariable Long eventId) {
+        return requestService.getEventRequestsByEventOwner(userId, eventId);
+    }
 
+    @PatchMapping("/{eventId}/requests")
+    @ResponseStatus(HttpStatus.OK)
+    public EventRequestStatusUpdateResult patchEventRequestsByEventOwner(
+            @PathVariable Long userId,
+            @PathVariable Long eventId,
+            @Valid @RequestBody EventRequestStatusUpdateRequest eventRequestStatusUpdateRequest) {
+        return requestService.patchEventRequestsByEventOwner(userId, eventId, eventRequestStatusUpdateRequest);
+    }
 }
