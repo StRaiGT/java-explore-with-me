@@ -70,7 +70,6 @@ public class CategoryServiceImpl implements CategoryService {
         categoryRepository.findById(catId)
                 .orElseThrow(() -> new NotFoundException("Категории с таким id не существует."));
 
-        //TODO добавить интеграционный тест на выброс ForbiddenException, если удалить категорию со связанным событием
         categoryRepository.deleteById(catId);
     }
 

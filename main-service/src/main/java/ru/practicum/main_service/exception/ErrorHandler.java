@@ -43,14 +43,7 @@ public class ErrorHandler {
                 LocalDateTime.now().format(MainCommonUtils.DT_FORMATTER));
     }
 
-    @ExceptionHandler({
-            MethodArgumentTypeMismatchException.class,
-            ConstraintViolationException.class,
-            //TODO
-            //DateTimeParseException.class,
-            //IllegalArgumentException.class,
-            //MissingServletRequestParameterException.class
-    })
+    @ExceptionHandler({MethodArgumentTypeMismatchException.class, ConstraintViolationException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiError handleValidationException(final RuntimeException exception) {
         log.error(exception.toString());

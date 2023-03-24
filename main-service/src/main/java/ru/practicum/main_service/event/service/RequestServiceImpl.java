@@ -21,9 +21,7 @@ import ru.practicum.main_service.user.service.UserService;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -35,6 +33,7 @@ import java.util.stream.Collectors;
 public class RequestServiceImpl implements RequestService {
     private final UserService userService;
     private final EventService eventService;
+    private final StatsService statsService;
     private final RequestRepository requestRepository;
     private final RequestMapper requestMapper;
 
@@ -168,12 +167,7 @@ public class RequestServiceImpl implements RequestService {
             requestRepository.saveAll(requests);
             rejectedList.addAll(requests);
         } else {
-            Map<Long, Long> requestStats = new HashMap<>();
-
-            requestRepository.getConfirmedRequests(List.of(eventId))
-                    .forEach(stat -> requestStats.put(stat.getEventId(), stat.getConfirmedRequests()));
-
-            Long confirmedRequests = requestStats.getOrDefault(eventId, 0L);
+            Long confirmedRequests = statsService.getConfirmedRequests(List.of(event)).getOrDefault(eventId, 0L);
 
             if ((confirmedRequests + eventRequestStatusUpdateRequest.getRequestIds().size()) > event.getParticipantLimit()) {
                 throw new ForbiddenException("Достигнут лимит подтвержденных запросов на участие.");

@@ -20,12 +20,10 @@ import ru.practicum.main_service.event.model.Event;
 import ru.practicum.main_service.event.model.Location;
 import ru.practicum.main_service.event.repository.EventRepository;
 import ru.practicum.main_service.event.repository.LocationRepository;
-import ru.practicum.main_service.event.repository.RequestRepository;
 import ru.practicum.main_service.exception.ForbiddenException;
 import ru.practicum.main_service.exception.NotFoundException;
 import ru.practicum.main_service.user.model.User;
 import ru.practicum.main_service.user.service.UserService;
-import ru.practicum.stats_common.model.ViewStats;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -35,12 +33,10 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -55,7 +51,6 @@ public class EventServiceImpl implements EventService {
     private final StatsService statsService;
     private final LocationRepository locationRepository;
     private final EventRepository eventRepository;
-    private final RequestRepository requestRepository;
     private final EventMapper eventMapper;
     private final LocationMapper locationMapper;
 
@@ -100,8 +95,8 @@ public class EventServiceImpl implements EventService {
             return List.of();
         }
 
-        Map<Long, Long> views = getViews(events);
-        Map<Long, Long> confirmedRequests = getConfirmedRequests(events);
+        Map<Long, Long> views = statsService.getViews(events);
+        Map<Long, Long> confirmedRequests = statsService.getConfirmedRequests(events);
 
         return events.stream()
                 .map((event) -> eventMapper.toEventFullDto(
@@ -156,7 +151,7 @@ public class EventServiceImpl implements EventService {
         if (updateEventAdminRequest.getParticipantLimit() != null) {
             if ((updateEventAdminRequest.getParticipantLimit() == 0) ||
                     (updateEventAdminRequest.getParticipantLimit() >=
-                            getConfirmedRequests(List.of(event)).getOrDefault(eventId, 0L))
+                            statsService.getConfirmedRequests(List.of(event)).getOrDefault(eventId, 0L))
             ) {
                 event.setParticipantLimit(updateEventAdminRequest.getParticipantLimit());
             } else {
@@ -207,8 +202,8 @@ public class EventServiceImpl implements EventService {
             return List.of();
         }
 
-        Map<Long, Long> confirmedRequests = getConfirmedRequests(events);
-        Map<Long, Long> views = getViews(events);
+        Map<Long, Long> confirmedRequests = statsService.getConfirmedRequests(events);
+        Map<Long, Long> views = statsService.getViews(events);
 
         return events.stream()
                 .map((event) -> eventMapper.toEventShortDto(
@@ -250,8 +245,8 @@ public class EventServiceImpl implements EventService {
         Event event = eventRepository.findByIdAndInitiatorId(eventId, userId)
                 .orElseThrow(() -> new NotFoundException("События с таким id не существует."));
 
-        Map<Long, Long> confirmedRequests = getConfirmedRequests(List.of(event));
-        Map<Long, Long> views = getViews(List.of(event));
+        Map<Long, Long> confirmedRequests = statsService.getConfirmedRequests(List.of(event));
+        Map<Long, Long> views = statsService.getViews(List.of(event));
 
         return eventMapper.toEventFullDto(event, confirmedRequests.getOrDefault(eventId, 0L),
                 views.getOrDefault(eventId, 0L));
@@ -383,7 +378,7 @@ public class EventServiceImpl implements EventService {
             return List.of();
         }
 
-        Map<Long, Long> confirmedRequests = getConfirmedRequests(events);
+        Map<Long, Long> confirmedRequests = statsService.getConfirmedRequests(events);
 
         if (onlyAvailable) {
             events = events.stream()
@@ -393,7 +388,7 @@ public class EventServiceImpl implements EventService {
 
         }
 
-        Map<Long, Long> views = getViews(events);
+        Map<Long, Long> views = statsService.getViews(events);
 
         List<EventShortDto> eventsShortDto = events.stream()
                 .map((event) -> eventMapper.toEventShortDto(
@@ -424,8 +419,8 @@ public class EventServiceImpl implements EventService {
             throw new NotFoundException("Событие с таким id не опубликовано.");
         }
 
-        Map<Long, Long> confirmedRequests = getConfirmedRequests(List.of(event));
-        Map<Long, Long> views = getViews(List.of(event));
+        Map<Long, Long> confirmedRequests = statsService.getConfirmedRequests(List.of(event));
+        Map<Long, Long> views = statsService.getViews(List.of(event));
 
         statsService.addHit(request);
 
@@ -441,50 +436,18 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new NotFoundException("События с таким id не существует."));
     }
 
-    private Map<Long, Long> getConfirmedRequests(List<Event> events) {
-        List<Event> publishedEvents = events.stream()
-                .filter(event -> event.getPublishedOn() != null)
-                .collect(Collectors.toList());
+    @Override
+    public List<Event> getEventsByIds(List<Long> eventsId) {
+        log.info("Вывод списка событий с ids {}", eventsId);
 
-        List<Long> eventsId = publishedEvents.stream()
-                .map(Event::getId)
-                .collect(Collectors.toList());
-
-        Map<Long, Long> requestStats = new HashMap<>();
-
-        requestRepository.getConfirmedRequests(eventsId)
-                .forEach(stat -> requestStats.put(stat.getEventId(), stat.getConfirmedRequests()));
-
-        return requestStats;
-    }
-
-    private Map<Long, Long> getViews(List<Event> events) {
-        Map<Long, Long> views = new HashMap<>();
-
-        Optional<LocalDateTime> minPublishedOn = events.stream()
-                .map(Event::getPublishedOn)
-                .filter(Objects::nonNull)
-                .min(LocalDateTime::compareTo);
-
-        if (minPublishedOn.isPresent()) {
-            LocalDateTime start = minPublishedOn.get();
-            LocalDateTime end = LocalDateTime.now();
-            List<String> uris = events.stream()
-                    .map(Event::getId)
-                    .map(id -> ("/events/" + id))
-                    .collect(Collectors.toList());
-
-            List<ViewStats> stats = statsService.getStats(start, end, uris, null);
-            stats.forEach(stat -> {
-                Long eventId = Long.parseLong(stat.getUri()
-                        .split("/", 0)[2]);
-                views.put(eventId, views.getOrDefault(eventId, 0L) + stat.getHits());
-            });
+        if (eventsId.isEmpty()) {
+            return new ArrayList<>();
         }
-        return views;
+
+        return eventRepository.findAllByIdIn(eventsId);
     }
 
-    void checkStartIsBeforeEnd(LocalDateTime rangeStart, LocalDateTime rangeEnd) {
+    private void checkStartIsBeforeEnd(LocalDateTime rangeStart, LocalDateTime rangeEnd) {
         if (rangeStart != null && rangeEnd != null && rangeStart.isAfter(rangeEnd)) {
             throw new ForbiddenException(String.format("Field: eventDate. Error: некорректные параметры временного " +
                     "интервала. Value: rangeStart = %s, rangeEnd = %s", rangeStart, rangeEnd));

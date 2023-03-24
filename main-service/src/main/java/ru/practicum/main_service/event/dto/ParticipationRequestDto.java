@@ -7,7 +7,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 import lombok.experimental.FieldDefaults;
 import ru.practicum.main_service.MainCommonUtils;
 import ru.practicum.main_service.event.enums.RequestStatus;
@@ -19,7 +18,6 @@ import java.time.LocalDateTime;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString
 @Builder
 public class ParticipationRequestDto {
     Long id;

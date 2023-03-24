@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.main_service.MainCommonUtils;
+import ru.practicum.main_service.event.model.Event;
+import ru.practicum.main_service.event.repository.RequestRepository;
 import ru.practicum.stats_client.StatsClient;
 import ru.practicum.stats_common.model.ViewStats;
 
@@ -15,7 +17,12 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +30,7 @@ import java.util.List;
 @Slf4j
 public class StatsServiceImpl implements StatsService {
     private final StatsClient statsClient;
+    private final RequestRepository requestRepository;
     private final ObjectMapper mapper = new ObjectMapper();
 
     @Value(value = "${app.name}")
@@ -48,5 +56,54 @@ public class StatsServiceImpl implements StatsService {
         } catch (IOException exception) {
             throw new ClassCastException(exception.getMessage());
         }
+    }
+
+    @Override
+    public Map<Long, Long> getViews(List<Event> events) {
+        log.info("Отправлен запрос на получение статистики неуникальных посещений в виде Map<eventId, count> " +
+                "для списка событий.");
+
+        Map<Long, Long> views = new HashMap<>();
+
+        Optional<LocalDateTime> minPublishedOn = events.stream()
+                .map(Event::getPublishedOn)
+                .filter(Objects::nonNull)
+                .min(LocalDateTime::compareTo);
+
+        if (minPublishedOn.isPresent()) {
+            LocalDateTime start = minPublishedOn.get();
+            LocalDateTime end = LocalDateTime.now();
+            List<String> uris = events.stream()
+                    .map(Event::getId)
+                    .map(id -> ("/events/" + id))
+                    .collect(Collectors.toList());
+
+            List<ViewStats> stats = getStats(start, end, uris, null);
+            stats.forEach(stat -> {
+                Long eventId = Long.parseLong(stat.getUri()
+                        .split("/", 0)[2]);
+                views.put(eventId, views.getOrDefault(eventId, 0L) + stat.getHits());
+            });
+        }
+        return views;
+    }
+
+    @Override
+    public Map<Long, Long> getConfirmedRequests(List<Event> events) {
+
+        List<Event> publishedEvents = events.stream()
+                .filter(event -> event.getPublishedOn() != null)
+                .collect(Collectors.toList());
+
+        List<Long> eventsId = publishedEvents.stream()
+                .map(Event::getId)
+                .collect(Collectors.toList());
+
+        Map<Long, Long> requestStats = new HashMap<>();
+
+        requestRepository.getConfirmedRequests(eventsId)
+                .forEach(stat -> requestStats.put(stat.getEventId(), stat.getConfirmedRequests()));
+
+        return requestStats;
     }
 }
