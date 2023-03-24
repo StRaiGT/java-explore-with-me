@@ -37,7 +37,6 @@ public class CompilationServiceImpl implements CompilationService {
     private final EventMapper eventMapper;
     private final CompilationMapper compilationMapper;
 
-
     @Override
     @Transactional
     public CompilationDto create(NewCompilationDto newCompilationDto) {
