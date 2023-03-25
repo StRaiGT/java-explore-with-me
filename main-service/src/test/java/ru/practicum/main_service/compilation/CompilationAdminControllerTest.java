@@ -10,6 +10,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.practicum.main_service.MainCommonUtils;
 import ru.practicum.main_service.compilation.controller.CompilationAdminController;
 import ru.practicum.main_service.compilation.dto.CompilationDto;
 import ru.practicum.main_service.compilation.dto.NewCompilationDto;
@@ -39,9 +40,6 @@ public class CompilationAdminControllerTest {
 
     @MockBean
     private CompilationService compilationService;
-
-    private final int minStringLength = 3;
-    private final int maxStringLength = 120;
 
     private final EventShortDto eventShortDto = EventShortDto.builder()
             .id(2L)
@@ -118,7 +116,7 @@ public class CompilationAdminControllerTest {
         }
 
         @Test
-        public void shouldThrowExceptionIfTitleIsNull() throws Exception {
+        public void shouldReturnBadRequestIfTitleIsNull() throws Exception {
             newCompilationDto.setTitle(null);
 
             mvc.perform(post("/admin/compilations")
@@ -132,7 +130,7 @@ public class CompilationAdminControllerTest {
         }
 
         @Test
-        public void shouldThrowExceptionIfTitleIsEmpty() throws Exception {
+        public void shouldReturnBadRequestIfTitleIsEmpty() throws Exception {
             newCompilationDto.setTitle("");
 
             mvc.perform(post("/admin/compilations")
@@ -146,8 +144,12 @@ public class CompilationAdminControllerTest {
         }
 
         @Test
-        public void shouldThrowExceptionIfTitleIsBlank() throws Exception {
-            newCompilationDto.setTitle("      ");
+        public void shouldReturnBadRequestIfTitleIsBlank() throws Exception {
+            StringBuilder sb = new StringBuilder();
+            while (sb.length() < MainCommonUtils.MIN_LENGTH_TITLE) {
+                sb.append(" ");
+            }
+            newCompilationDto.setTitle(sb.toString());
 
             mvc.perform(post("/admin/compilations")
                             .content(mapper.writeValueAsString(newCompilationDto))
@@ -160,9 +162,9 @@ public class CompilationAdminControllerTest {
         }
 
         @Test
-        public void shouldThrowExceptionIfTitleIsLessMin() throws Exception {
+        public void shouldReturnBadRequestIfTitleIsLessMin() throws Exception {
             StringBuilder sb = new StringBuilder();
-            while (sb.length() < minStringLength - 1) {
+            while (sb.length() < MainCommonUtils.MIN_LENGTH_TITLE - 1) {
                 sb.append("a");
             }
             newCompilationDto.setTitle(sb.toString());
@@ -178,9 +180,9 @@ public class CompilationAdminControllerTest {
         }
 
         @Test
-        public void shouldThrowExceptionIfTitleIsGreaterMax() throws Exception {
+        public void shouldReturnBadRequestIfTitleIsGreaterMax() throws Exception {
             StringBuilder sb = new StringBuilder();
-            while (sb.length() <= maxStringLength) {
+            while (sb.length() <= MainCommonUtils.MAX_LENGTH_TITLE) {
                 sb.append("a");
             }
             newCompilationDto.setTitle(sb.toString());
@@ -274,7 +276,7 @@ public class CompilationAdminControllerTest {
         }
 
         @Test
-        public void shouldThrowExceptionIfTitleIsEmpty() throws Exception {
+        public void shouldReturnBadRequestIfTitleIsEmpty() throws Exception {
             updateCompilationRequest.setTitle("");
 
             mvc.perform(patch("/admin/compilations/1")
@@ -288,9 +290,9 @@ public class CompilationAdminControllerTest {
         }
 
         @Test
-        public void shouldThrowExceptionIfTitleIsLessMin() throws Exception {
+        public void shouldReturnBadRequestIfTitleIsLessMin() throws Exception {
             StringBuilder sb = new StringBuilder();
-            while (sb.length() < minStringLength - 1) {
+            while (sb.length() < MainCommonUtils.MIN_LENGTH_TITLE - 1) {
                 sb.append("a");
             }
             updateCompilationRequest.setTitle(sb.toString());
@@ -306,9 +308,9 @@ public class CompilationAdminControllerTest {
         }
 
         @Test
-        public void shouldThrowExceptionIfTitleIsGreaterMax() throws Exception {
+        public void shouldReturnBadRequestIfTitleIsGreaterMax() throws Exception {
             StringBuilder sb = new StringBuilder();
-            while (sb.length() <= maxStringLength) {
+            while (sb.length() <= MainCommonUtils.MAX_LENGTH_TITLE) {
                 sb.append("a");
             }
             updateCompilationRequest.setTitle(sb.toString());

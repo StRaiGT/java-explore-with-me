@@ -9,6 +9,7 @@ import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import ru.practicum.main_service.MainCommonUtils;
 import ru.practicum.main_service.category.model.Category;
 import ru.practicum.main_service.event.enums.EventState;
 import ru.practicum.main_service.user.model.User;
@@ -25,7 +26,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import java.time.LocalDateTime;
-import java.util.Objects;
 
 @Entity
 @Table(name = "events", schema = "public")
@@ -40,17 +40,17 @@ public class Event {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    @Column(nullable = false, length = 120)
+    @Column(nullable = false, length = MainCommonUtils.MAX_LENGTH_TITLE)
     String title;
 
-    @Column(nullable = false, length = 2000)
+    @Column(nullable = false, length = MainCommonUtils.MAX_LENGTH_ANNOTATION)
     String annotation;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "category_id", referencedColumnName = "id")
     Category category;
 
-    @Column(nullable = false, length = 7000)
+    @Column(nullable = false, length = MainCommonUtils.MAX_LENGTH_DESCRIPTION)
     String description;
 
     @Column(nullable = false)
@@ -73,7 +73,6 @@ public class Event {
     @Enumerated(EnumType.STRING)
     EventState state;
 
-    @Column
     LocalDateTime publishedOn;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -83,17 +82,4 @@ public class Event {
 
     @Column(nullable = false)
     Boolean requestModeration;
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Event event = (Event) o;
-        return Objects.equals(id, event.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
 }

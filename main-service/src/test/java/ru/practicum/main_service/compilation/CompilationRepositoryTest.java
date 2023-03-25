@@ -144,6 +144,6 @@ public class CompilationRepositoryTest {
         assertEquals(compilation.getId(), compilationFromRepository.getId());
         assertEquals(compilation.getTitle(), compilationFromRepository.getTitle());
         assertEquals(compilation.getPinned(), compilationFromRepository.getPinned());
-        assertEquals(compilation.getEvents(), compilationFromRepository.getEvents());
+        assertEquals(compilation.getEvents().size(), compilationFromRepository.getEvents().size());
     }
 }

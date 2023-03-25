@@ -75,9 +75,7 @@ public class UserServiceImplTest {
 
             UserDto savedUserDto = userService.create(newUserRequest);
 
-            assertEquals(user1.getId(), savedUserDto.getId());
-            assertEquals(newUserRequest.getEmail(), savedUserDto.getEmail());
-            assertEquals(newUserRequest.getName(), savedUserDto.getName());
+            checkResult(user1, savedUserDto);
 
             verify(userMapper, times(1)).toUser(any());
             verify(userMapper, times(1)).toUserDto(any());

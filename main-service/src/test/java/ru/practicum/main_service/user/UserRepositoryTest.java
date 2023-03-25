@@ -70,9 +70,9 @@ public class UserRepositoryTest {
             User userFromRepository2 = usersFromRepository.get(1);
             User userFromRepository3 = usersFromRepository.get(2);
 
-            checkResult(user1, userFromRepository1);
-            checkResult(user2, userFromRepository2);
-            checkResult(user3, userFromRepository3);
+            assertEquals(user1, userFromRepository1);
+            assertEquals(user2, userFromRepository2);
+            assertEquals(user3, userFromRepository3);
         }
 
         @Test
@@ -83,7 +83,7 @@ public class UserRepositoryTest {
 
             User userFromRepository1 = usersFromRepository.get(0);
 
-            checkResult(user3, userFromRepository1);
+            assertEquals(user3, userFromRepository1);
         }
 
         @Test
@@ -102,7 +102,7 @@ public class UserRepositoryTest {
 
             User userFromRepository1 = usersFromRepository.get(0);
 
-            checkResult(user3, userFromRepository1);
+            assertEquals(user3, userFromRepository1);
         }
     }
 
@@ -114,11 +114,5 @@ public class UserRepositoryTest {
 
             assertTrue(userRepository.findById(user4.getId()).isEmpty());
         }
-    }
-
-    private void checkResult(User user, User userFromRepository) {
-        assertEquals(user.getId(), userFromRepository.getId());
-        assertEquals(user.getName(), userFromRepository.getName());
-        assertEquals(user.getEmail(), userFromRepository.getEmail());
     }
 }

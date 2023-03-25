@@ -76,7 +76,7 @@ public class UserAdminControllerTest {
         }
 
         @Test
-        public void shouldThrowExceptionIfNameIsNull() throws Exception {
+        public void shouldReturnBadRequestIfNameIsNull() throws Exception {
             newUserRequest.setName(null);
 
             mvc.perform(post("/admin/users")
@@ -90,7 +90,7 @@ public class UserAdminControllerTest {
         }
 
         @Test
-        public void shouldThrowExceptionIfNameIsEmpty() throws Exception {
+        public void shouldReturnBadRequestIfNameIsEmpty() throws Exception {
             newUserRequest.setName("");
 
             mvc.perform(post("/admin/users")
@@ -104,7 +104,7 @@ public class UserAdminControllerTest {
         }
 
         @Test
-        public void shouldThrowExceptionIfNameIsBlank() throws Exception {
+        public void shouldReturnBadRequestIfNameIsBlank() throws Exception {
             newUserRequest.setName(" ");
 
             mvc.perform(post("/admin/users")
@@ -118,7 +118,7 @@ public class UserAdminControllerTest {
         }
 
         @Test
-        public void shouldThrowExceptionIfEmailIsNull() throws Exception {
+        public void shouldReturnBadRequestIfEmailIsNull() throws Exception {
             newUserRequest.setEmail(null);
 
             mvc.perform(post("/admin/users")
@@ -132,7 +132,7 @@ public class UserAdminControllerTest {
         }
 
         @Test
-        public void shouldThrowExceptionIfEmailIsEmpty() throws Exception {
+        public void shouldReturnBadRequestIfEmailIsEmpty() throws Exception {
             newUserRequest.setEmail("");
 
             mvc.perform(post("/admin/users")
@@ -146,7 +146,7 @@ public class UserAdminControllerTest {
         }
 
         @Test
-        public void shouldThrowExceptionIfEmailIsBlank() throws Exception {
+        public void shouldReturnBadRequestIfEmailIsBlank() throws Exception {
             newUserRequest.setEmail(" ");
 
             mvc.perform(post("/admin/users")
@@ -160,7 +160,7 @@ public class UserAdminControllerTest {
         }
 
         @Test
-        public void shouldThrowExceptionIfEmailIsNotValid() throws Exception {
+        public void shouldReturnBadRequestIfEmailIsNotValid() throws Exception {
             newUserRequest.setEmail("testYandex.ru");
 
             mvc.perform(post("/admin/users")
@@ -252,7 +252,7 @@ public class UserAdminControllerTest {
         }
 
         @Test
-        public void shouldThrowExceptionIfFromIsNegative() throws Exception {
+        public void shouldReturnBadRequestIfFromIsNegative() throws Exception {
             mvc.perform(get("/admin/users?from=-1")
                             .characterEncoding(StandardCharsets.UTF_8)
                             .contentType(MediaType.APPLICATION_JSON)
@@ -263,7 +263,7 @@ public class UserAdminControllerTest {
         }
 
         @Test
-        public void shouldThrowExceptionIfSizeIsZero() throws Exception {
+        public void shouldReturnBadRequestIfSizeIsZero() throws Exception {
             mvc.perform(get("/admin/users?size=0")
                             .characterEncoding(StandardCharsets.UTF_8)
                             .contentType(MediaType.APPLICATION_JSON)
@@ -274,7 +274,7 @@ public class UserAdminControllerTest {
         }
 
         @Test
-        public void shouldThrowExceptionIfSizeIsNegative() throws Exception {
+        public void shouldReturnBadRequestIfSizeIsNegative() throws Exception {
             mvc.perform(get("/admin/users?size=-1")
                             .characterEncoding(StandardCharsets.UTF_8)
                             .contentType(MediaType.APPLICATION_JSON)

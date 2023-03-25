@@ -9,6 +9,7 @@ import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import ru.practicum.main_service.MainCommonUtils;
 import ru.practicum.main_service.event.model.Event;
 
 import javax.persistence.Column;
@@ -35,7 +36,7 @@ public class Compilation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    @Column(nullable = false, length = 120, unique = true)
+    @Column(nullable = false, length = MainCommonUtils.MAX_LENGTH_TITLE, unique = true)
     String title;
 
     @Column(nullable = false)

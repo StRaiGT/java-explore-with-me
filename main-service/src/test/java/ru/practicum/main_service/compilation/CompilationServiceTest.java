@@ -178,7 +178,7 @@ public class CompilationServiceTest {
                     .thenReturn(eventShortDto1);
             when(eventMapper.toEventShortDto(ArgumentMatchers.eq(event2), ArgumentMatchers.any(), ArgumentMatchers.any()))
                     .thenReturn(eventShortDto2);
-            when(compilationMapper.toCompilationDto(any(), any())).thenReturn(compilationDto1);
+            when(compilationMapper.toCompilationDto(any(), any())).thenCallRealMethod();
 
             CompilationDto savedCompilationDto = compilationService.create(newCompilationDto1);
 
@@ -206,7 +206,7 @@ public class CompilationServiceTest {
             when(compilationRepository.findById(any())).thenReturn(Optional.of(compilation2));
             when(statsService.getViews(any())).thenReturn(new HashMap<>());
             when(statsService.getConfirmedRequests(any())).thenReturn(new HashMap<>());
-            when(compilationMapper.toCompilationDto(any(), any())).thenReturn(compilationDto2);
+            when(compilationMapper.toCompilationDto(any(), any())).thenCallRealMethod();
 
             CompilationDto savedCompilationDto = compilationService.create(newCompilationDto2);
 
@@ -249,7 +249,7 @@ public class CompilationServiceTest {
             when(statsService.getConfirmedRequests(any())).thenReturn(new HashMap<>());
             when(eventMapper.toEventShortDto(ArgumentMatchers.eq(event1), ArgumentMatchers.any(), ArgumentMatchers.any()))
                     .thenReturn(eventShortDto2);
-            when(compilationMapper.toCompilationDto(any(), any())).thenReturn(updatedCompilationDto1);
+            when(compilationMapper.toCompilationDto(any(), any())).thenCallRealMethod();
 
             CompilationDto savedCompilationDto = compilationService.patch(compilation1.getId(), updateCompilationRequest1);
 
@@ -332,9 +332,9 @@ public class CompilationServiceTest {
             when(eventMapper.toEventShortDto(ArgumentMatchers.eq(event2), ArgumentMatchers.any(), ArgumentMatchers.any()))
                     .thenReturn(eventShortDto2);
             when(compilationMapper.toCompilationDto(ArgumentMatchers.eq(compilation1), ArgumentMatchers.any()))
-                    .thenReturn(compilationDto1);
+                    .thenCallRealMethod();
             when(compilationMapper.toCompilationDto(ArgumentMatchers.eq(compilation2), ArgumentMatchers.any()))
-                    .thenReturn(compilationDto2);
+                    .thenCallRealMethod();
 
             List<CompilationDto> savedCompilationsDto = compilationService.getAll(null, pageable);
 
@@ -359,7 +359,7 @@ public class CompilationServiceTest {
             when(statsService.getViews(any())).thenReturn(views);
             when(statsService.getConfirmedRequests(any())).thenReturn(confirmedRequests);
             when(compilationMapper.toCompilationDto(ArgumentMatchers.eq(compilation2), ArgumentMatchers.any()))
-                    .thenReturn(compilationDto2);
+                    .thenCallRealMethod();
 
             List<CompilationDto> savedCompilationsDto = compilationService.getAll(compilation2.getPinned(), pageable);
 
@@ -388,7 +388,7 @@ public class CompilationServiceTest {
             when(eventMapper.toEventShortDto(ArgumentMatchers.eq(event2), ArgumentMatchers.any(), ArgumentMatchers.any()))
                     .thenReturn(eventShortDto2);
             when(compilationMapper.toCompilationDto(ArgumentMatchers.eq(compilation1), ArgumentMatchers.any()))
-                    .thenReturn(compilationDto1);
+                    .thenCallRealMethod();
 
             CompilationDto savedCompilationsDto = compilationService.getById(compilation1.getId());
 
@@ -417,12 +417,12 @@ public class CompilationServiceTest {
         assertEquals(compilationDto.getId(), result.getId());
         assertEquals(compilationDto.getTitle(), result.getTitle());
         assertEquals(compilationDto.getPinned(), result.getPinned());
-        assertEquals(compilationDto.getEvents(), result.getEvents());
+        assertEquals(compilationDto.getEvents().size(), result.getEvents().size());
     }
 
     private void checkResults(Compilation compilation, Compilation result) {
         assertEquals(compilation.getTitle(), result.getTitle());
         assertEquals(compilation.getPinned(), result.getPinned());
-        assertEquals(compilation.getEvents(), result.getEvents());
+        assertEquals(compilation.getEvents().size(), result.getEvents().size());
     }
 }

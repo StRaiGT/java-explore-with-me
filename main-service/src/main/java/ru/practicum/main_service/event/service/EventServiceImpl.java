@@ -147,17 +147,16 @@ public class EventServiceImpl implements EventService {
             event.setLocation(eventLocation);
         }
 
-
         if (updateEventAdminRequest.getParticipantLimit() != null) {
-            if ((updateEventAdminRequest.getParticipantLimit() == 0) ||
-                    (updateEventAdminRequest.getParticipantLimit() >=
-                            statsService.getConfirmedRequests(List.of(event)).getOrDefault(eventId, 0L))
-            ) {
-                event.setParticipantLimit(updateEventAdminRequest.getParticipantLimit());
-            } else {
-                throw new ForbiddenException(String.format("Field: stateAction. Error: Новый лимит участников должен " +
-                        "быть не меньше количества уже одобренных заявок: %s", event.getParticipantLimit()));
+            if (updateEventAdminRequest.getParticipantLimit() != 0) {
+                Long confirmedRequests = statsService.getConfirmedRequests(List.of(event)).getOrDefault(eventId, 0L);
+                if (updateEventAdminRequest.getParticipantLimit() < confirmedRequests) {
+                    throw new ForbiddenException(String.format("Field: stateAction. Error: Новый лимит участников должен " +
+                            "быть не меньше количества уже одобренных заявок: %s", confirmedRequests));
+                }
             }
+
+            event.setParticipantLimit(updateEventAdminRequest.getParticipantLimit());
         }
 
         if (updateEventAdminRequest.getRequestModeration() != null) {

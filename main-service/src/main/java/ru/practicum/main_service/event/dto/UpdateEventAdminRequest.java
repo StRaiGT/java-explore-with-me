@@ -25,12 +25,12 @@ import java.time.LocalDateTime;
 @ToString
 @Builder
 public class UpdateEventAdminRequest {
-    @Size(min = 20, max = 2000)
+    @Size(min = MainCommonUtils.MIN_LENGTH_ANNOTATION, max = MainCommonUtils.MAX_LENGTH_ANNOTATION)
     String annotation;
 
     Long category;
 
-    @Size(min = 20, max = 7000)
+    @Size(min = MainCommonUtils.MIN_LENGTH_DESCRIPTION, max = MainCommonUtils.MAX_LENGTH_DESCRIPTION)
     String description;
 
     @JsonFormat(pattern = MainCommonUtils.DT_FORMAT, shape = JsonFormat.Shape.STRING)
@@ -48,6 +48,6 @@ public class UpdateEventAdminRequest {
 
     EventStateAction stateAction;
 
-    @Size(min = 3, max = 120)
+    @Size(min = MainCommonUtils.MIN_LENGTH_TITLE, max = MainCommonUtils.MAX_LENGTH_TITLE)
     String title;
 }

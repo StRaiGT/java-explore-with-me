@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.FieldDefaults;
+import ru.practicum.main_service.MainCommonUtils;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
@@ -23,7 +24,7 @@ import java.util.List;
 @Builder
 public class NewCompilationDto {
     @NotBlank
-    @Size(min = 3, max = 120)
+    @Size(min = MainCommonUtils.MIN_LENGTH_TITLE, max = MainCommonUtils.MAX_LENGTH_TITLE)
     String title;
 
     Boolean pinned = false;

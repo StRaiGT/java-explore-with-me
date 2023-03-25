@@ -90,7 +90,7 @@ public class CompilationPublicControllerTest {
         }
 
         @Test
-        public void shouldThrowExceptionIfFromIsNegative() throws Exception {
+        public void shouldReturnBadRequestIfFromIsNegative() throws Exception {
             mvc.perform(get("/compilations?from=-1")
                             .characterEncoding(StandardCharsets.UTF_8)
                             .contentType(MediaType.APPLICATION_JSON)
@@ -101,7 +101,7 @@ public class CompilationPublicControllerTest {
         }
 
         @Test
-        public void shouldThrowExceptionIfSizeIsZero() throws Exception {
+        public void shouldReturnBadRequestIfSizeIsZero() throws Exception {
             mvc.perform(get("/compilations?size=0")
                             .characterEncoding(StandardCharsets.UTF_8)
                             .contentType(MediaType.APPLICATION_JSON)
@@ -112,7 +112,7 @@ public class CompilationPublicControllerTest {
         }
 
         @Test
-        public void shouldThrowExceptionIfSizeIsNegative() throws Exception {
+        public void shouldReturnBadRequestIfSizeIsNegative() throws Exception {
             mvc.perform(get("/compilations?size=-1")
                             .characterEncoding(StandardCharsets.UTF_8)
                             .contentType(MediaType.APPLICATION_JSON)

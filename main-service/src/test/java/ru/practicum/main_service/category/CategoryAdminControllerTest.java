@@ -70,7 +70,7 @@ public class CategoryAdminControllerTest {
         }
 
         @Test
-        public void shouldThrowExceptionIfNameIsNull() throws Exception {
+        public void shouldReturnBadRequestIfNameIsNull() throws Exception {
             newCategoryDto.setName(null);
 
             mvc.perform(post("/admin/categories")
@@ -84,7 +84,7 @@ public class CategoryAdminControllerTest {
         }
 
         @Test
-        public void shouldThrowExceptionIfNameIsEmpty() throws Exception {
+        public void shouldReturnBadRequestIfNameIsEmpty() throws Exception {
             newCategoryDto.setName("");
 
             mvc.perform(post("/admin/categories")
@@ -98,7 +98,7 @@ public class CategoryAdminControllerTest {
         }
 
         @Test
-        public void shouldThrowExceptionIfNameIsBlank() throws Exception {
+        public void shouldReturnBadRequestIfNameIsBlank() throws Exception {
             newCategoryDto.setName(" ");
 
             mvc.perform(post("/admin/categories")
@@ -138,7 +138,7 @@ public class CategoryAdminControllerTest {
         }
 
         @Test
-        public void shouldThrowExceptionIfNameIsNull() throws Exception {
+        public void shouldReturnBadRequestIfNameIsNull() throws Exception {
             categoryDto2.setName(null);
 
             mvc.perform(patch("/admin/categories/1")
@@ -152,7 +152,7 @@ public class CategoryAdminControllerTest {
         }
 
         @Test
-        public void shouldThrowExceptionIfNameIsEmpty() throws Exception {
+        public void shouldReturnBadRequestIfNameIsEmpty() throws Exception {
             categoryDto2.setName("");
 
             mvc.perform(patch("/admin/categories/1")
@@ -166,7 +166,7 @@ public class CategoryAdminControllerTest {
         }
 
         @Test
-        public void shouldThrowExceptionIfNameIsBlank() throws Exception {
+        public void shouldReturnBadRequestIfNameIsBlank() throws Exception {
             categoryDto2.setName(" ");
 
             mvc.perform(patch("/admin/categories/1")

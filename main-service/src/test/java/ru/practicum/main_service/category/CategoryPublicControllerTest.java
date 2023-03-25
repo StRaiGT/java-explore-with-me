@@ -88,7 +88,7 @@ public class CategoryPublicControllerTest {
         }
 
         @Test
-        public void shouldThrowExceptionIfFromIsNegative() throws Exception {
+        public void shouldReturnBadRequestIfFromIsNegative() throws Exception {
             mvc.perform(get("/categories?from=-1")
                             .characterEncoding(StandardCharsets.UTF_8)
                             .contentType(MediaType.APPLICATION_JSON)
@@ -99,7 +99,7 @@ public class CategoryPublicControllerTest {
         }
 
         @Test
-        public void shouldThrowExceptionIfSizeIsZero() throws Exception {
+        public void shouldReturnBadRequestIfSizeIsZero() throws Exception {
             mvc.perform(get("/categories?size=0")
                             .characterEncoding(StandardCharsets.UTF_8)
                             .contentType(MediaType.APPLICATION_JSON)
@@ -110,7 +110,7 @@ public class CategoryPublicControllerTest {
         }
 
         @Test
-        public void shouldThrowExceptionIfSizeIsNegative() throws Exception {
+        public void shouldReturnBadRequestIfSizeIsNegative() throws Exception {
             mvc.perform(get("/categories?size=-1")
                             .characterEncoding(StandardCharsets.UTF_8)
                             .contentType(MediaType.APPLICATION_JSON)

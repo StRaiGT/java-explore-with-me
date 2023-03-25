@@ -101,8 +101,10 @@ public class StatsServiceImpl implements StatsService {
 
         Map<Long, Long> requestStats = new HashMap<>();
 
-        requestRepository.getConfirmedRequests(eventsId)
-                .forEach(stat -> requestStats.put(stat.getEventId(), stat.getConfirmedRequests()));
+        if (!eventsId.isEmpty()) {
+            requestRepository.getConfirmedRequests(eventsId)
+                    .forEach(stat -> requestStats.put(stat.getEventId(), stat.getConfirmedRequests()));
+        }
 
         return requestStats;
     }

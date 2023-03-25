@@ -27,14 +27,14 @@ import java.time.LocalDateTime;
 @Builder
 public class NewEventDto {
     @NotBlank
-    @Size(min = 20, max = 2000)
+    @Size(min = MainCommonUtils.MIN_LENGTH_ANNOTATION, max = MainCommonUtils.MAX_LENGTH_ANNOTATION)
     String annotation;
 
     @NotNull
     Long category;
 
     @NotBlank
-    @Size(min = 20, max = 7000)
+    @Size(min = MainCommonUtils.MIN_LENGTH_DESCRIPTION, max = MainCommonUtils.MAX_LENGTH_DESCRIPTION)
     String description;
 
     @NotNull
@@ -53,6 +53,6 @@ public class NewEventDto {
     Boolean requestModeration = true;
 
     @NotBlank
-    @Size(min = 3, max = 120)
+    @Size(min = MainCommonUtils.MIN_LENGTH_TITLE, max = MainCommonUtils.MAX_LENGTH_TITLE)
     String title;
 }

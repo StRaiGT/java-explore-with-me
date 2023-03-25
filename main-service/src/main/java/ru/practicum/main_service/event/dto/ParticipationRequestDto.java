@@ -12,6 +12,7 @@ import ru.practicum.main_service.MainCommonUtils;
 import ru.practicum.main_service.event.enums.RequestStatus;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
@@ -28,4 +29,19 @@ public class ParticipationRequestDto {
     LocalDateTime created;
 
     RequestStatus status;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ParticipationRequestDto that = (ParticipationRequestDto) o;
+        return Objects.equals(id, that.id) && Objects.equals(event, that.event) &&
+                Objects.equals(requester, that.requester) && Objects.equals(created, that.created) &&
+                status == that.status;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, event, requester, created, status);
+    }
 }

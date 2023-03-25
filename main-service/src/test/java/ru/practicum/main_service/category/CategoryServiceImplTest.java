@@ -83,8 +83,7 @@ public class CategoryServiceImplTest {
 
             CategoryDto savedCategoryDto = categoryService.create(newCategoryDto);
 
-            assertEquals(category1.getId(), savedCategoryDto.getId());
-            assertEquals(category1.getName(), savedCategoryDto.getName());
+            checkResult(category1, savedCategoryDto);
 
             verify(categoryMapper, times(1)).newCategoryDtoToCategory(any());
             verify(categoryMapper, times(1)).toCategoryDto(any());
@@ -242,8 +241,7 @@ public class CategoryServiceImplTest {
 
             Category categoryFromService = categoryService.getCategoryById(category2.getId());
 
-            assertEquals(category2.getId(), categoryFromService.getId());
-            assertEquals(category2.getName(), categoryFromService.getName());
+            assertEquals(category2, categoryFromService);
 
             verify(categoryRepository, times(1)).findById(any());
         }
