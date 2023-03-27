@@ -65,7 +65,13 @@ public class StatsServiceImpl implements StatsService {
 
         Map<Long, Long> views = new HashMap<>();
 
-        Optional<LocalDateTime> minPublishedOn = events.stream()
+        List<Event> publishedEvents = getPublished(events);
+
+        if (events.isEmpty()) {
+            return views;
+        }
+
+        Optional<LocalDateTime> minPublishedOn = publishedEvents.stream()
                 .map(Event::getPublishedOn)
                 .filter(Objects::nonNull)
                 .min(LocalDateTime::compareTo);
@@ -73,7 +79,7 @@ public class StatsServiceImpl implements StatsService {
         if (minPublishedOn.isPresent()) {
             LocalDateTime start = minPublishedOn.get();
             LocalDateTime end = LocalDateTime.now();
-            List<String> uris = events.stream()
+            List<String> uris = publishedEvents.stream()
                     .map(Event::getId)
                     .map(id -> ("/events/" + id))
                     .collect(Collectors.toList());
@@ -85,17 +91,13 @@ public class StatsServiceImpl implements StatsService {
                 views.put(eventId, views.getOrDefault(eventId, 0L) + stat.getHits());
             });
         }
+
         return views;
     }
 
     @Override
     public Map<Long, Long> getConfirmedRequests(List<Event> events) {
-
-        List<Event> publishedEvents = events.stream()
-                .filter(event -> event.getPublishedOn() != null)
-                .collect(Collectors.toList());
-
-        List<Long> eventsId = publishedEvents.stream()
+        List<Long> eventsId = getPublished(events).stream()
                 .map(Event::getId)
                 .collect(Collectors.toList());
 
@@ -107,5 +109,11 @@ public class StatsServiceImpl implements StatsService {
         }
 
         return requestStats;
+    }
+
+    private List<Event> getPublished(List<Event> events) {
+        return events.stream()
+                .filter(event -> event.getPublishedOn() != null)
+                .collect(Collectors.toList());
     }
 }

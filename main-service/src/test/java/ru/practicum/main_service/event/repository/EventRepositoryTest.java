@@ -72,7 +72,7 @@ public class EventRepositoryTest {
             .title("test title 2")
             .annotation("test annotation 2")
             .description("test description 2")
-            .eventDate(LocalDateTime.now().plusDays(4))
+            .eventDate(LocalDateTime.now().plusDays(6))
             .category(category)
             .location(location)
             .paid(true)
@@ -83,6 +83,22 @@ public class EventRepositoryTest {
             .createdOn(LocalDateTime.now().minusDays(1))
             .publishedOn(LocalDateTime.now().minusHours(3))
             .build();
+    private final Event event3 = Event.builder()
+            .id(3L)
+            .title("test title 3")
+            .annotation("test annotation 3")
+            .description("test description 3")
+            .eventDate(LocalDateTime.now().plusDays(4))
+            .category(category)
+            .location(location)
+            .paid(true)
+            .participantLimit(0)
+            .requestModeration(true)
+            .initiator(user)
+            .state(EventState.PUBLISHED)
+            .createdOn(LocalDateTime.now().minusDays(2))
+            .publishedOn(LocalDateTime.now().minusHours(6))
+            .build();
 
     @BeforeEach
     public void beforeEach() {
@@ -91,6 +107,7 @@ public class EventRepositoryTest {
         locationRepository.save(location);
         eventRepository.save(event1);
         eventRepository.save(event2);
+        eventRepository.save(event3);
     }
 
     @Nested
@@ -99,13 +116,15 @@ public class EventRepositoryTest {
         public void shouldGetTwo() {
             List<Event> eventsFromRepository = eventRepository.findAllByInitiatorId(user.getId(), pageable);
 
-            assertEquals(2, eventsFromRepository.size());
+            assertEquals(3, eventsFromRepository.size());
 
             Event eventFromRepository1 = eventsFromRepository.get(0);
             Event eventFromRepository2 = eventsFromRepository.get(1);
+            Event eventFromRepository3 = eventsFromRepository.get(2);
 
             assertEquals(event1.getId(), eventFromRepository1.getId());
             assertEquals(event2.getId(), eventFromRepository2.getId());
+            assertEquals(event3.getId(), eventFromRepository3.getId());
         }
 
         @Test
@@ -127,7 +146,6 @@ public class EventRepositoryTest {
             Event eventFromRepository = optionalEvent.get();
 
             assertEquals(event2.getId(), eventFromRepository.getId());
-
         }
 
         @Test
@@ -167,4 +185,112 @@ public class EventRepositoryTest {
             assertTrue(eventsFromRepository.isEmpty());
         }
     }
+
+    @Nested
+    class GetEventsByAdmin {
+        @Test
+        public void shouldGetTwo() {
+            List<Event> eventsFromRepository = eventRepository.getEventsByAdmin(List.of(user.getId()),
+                    List.of(EventState.values()), List.of(category.getId()), LocalDateTime.now().plusDays(1),
+                    LocalDateTime.now().plusDays(5),0, 10);
+
+            assertEquals(2, eventsFromRepository.size());
+
+            Event eventFromRepository1 = eventsFromRepository.get(0);
+            Event eventFromRepository2 = eventsFromRepository.get(1);
+
+            assertEquals(event1.getId(), eventFromRepository1.getId());
+            assertEquals(event3.getId(), eventFromRepository2.getId());
+        }
+
+        @Test
+        public void shouldGetOne() {
+            List<Event> eventsFromRepository = eventRepository.getEventsByAdmin(List.of(user.getId()),
+                    List.of(EventState.PUBLISHED), List.of(category.getId()), LocalDateTime.now().plusDays(5),
+                    LocalDateTime.now().plusDays(6),0, 10);
+
+            assertEquals(1, eventsFromRepository.size());
+
+            Event eventFromRepository1 = eventsFromRepository.get(0);
+
+            assertEquals(event2.getId(), eventFromRepository1.getId());
+        }
+
+        @Test
+        public void shouldGetAll() {
+            List<Event> eventsFromRepository = eventRepository.getEventsByAdmin(null, null, null,
+                    null, null,0, 10);
+
+            assertEquals(3, eventsFromRepository.size());
+
+            Event eventFromRepository1 = eventsFromRepository.get(0);
+            Event eventFromRepository2 = eventsFromRepository.get(1);
+            Event eventFromRepository3 = eventsFromRepository.get(2);
+
+            assertEquals(event1.getId(), eventFromRepository1.getId());
+            assertEquals(event2.getId(), eventFromRepository2.getId());
+            assertEquals(event3.getId(), eventFromRepository3.getId());
+        }
+
+        @Test
+        public void shouldGetEmpty() {
+            List<Event> eventsFromRepository = eventRepository.getEventsByAdmin(List.of(2L), null, null,
+                    null, null,0, 10);
+
+            assertTrue(eventsFromRepository.isEmpty());
+        }
+
+    }
+
+    @Nested
+    class GetEventsByPublic {
+        @Test
+        public void shouldGetTwo() {
+            List<Event> eventsFromRepository = eventRepository.getEventsByPublic("TeSt", List.of(category.getId()),
+                    true, LocalDateTime.now().plusDays(3), LocalDateTime.now().plusDays(7), 0, 10);
+
+            assertEquals(2, eventsFromRepository.size());
+
+            Event eventFromRepository1 = eventsFromRepository.get(0);
+            Event eventFromRepository2 = eventsFromRepository.get(1);
+
+            assertEquals(event2.getId(), eventFromRepository1.getId());
+            assertEquals(event3.getId(), eventFromRepository2.getId());
+        }
+
+        @Test
+        public void shouldGetOne() {
+            List<Event> eventsFromRepository = eventRepository.getEventsByPublic("TiON 2", List.of(category.getId()),
+                    true, LocalDateTime.now().plusDays(3), LocalDateTime.now().plusDays(7), 0, 10);
+
+            assertEquals(1, eventsFromRepository.size());
+
+            Event eventFromRepository1 = eventsFromRepository.get(0);
+
+            assertEquals(event2.getId(), eventFromRepository1.getId());
+        }
+
+        @Test
+        public void shouldGetAllPublished() {
+            List<Event> eventsFromRepository = eventRepository.getEventsByPublic(null, null, null,
+                    null, null, 0, 10);
+
+            assertEquals(2, eventsFromRepository.size());
+
+            Event eventFromRepository1 = eventsFromRepository.get(0);
+            Event eventFromRepository2 = eventsFromRepository.get(1);
+
+            assertEquals(event2.getId(), eventFromRepository1.getId());
+            assertEquals(event3.getId(), eventFromRepository2.getId());
+        }
+
+        @Test
+        public void shouldGetEmpty() {
+            List<Event> eventsFromRepository = eventRepository.getEventsByPublic("not exist text", List.of(category.getId()),
+                    true, LocalDateTime.now().plusDays(3), LocalDateTime.now().plusDays(7), 0, 10);
+
+            assertTrue(eventsFromRepository.isEmpty());
+        }
+    }
+
 }

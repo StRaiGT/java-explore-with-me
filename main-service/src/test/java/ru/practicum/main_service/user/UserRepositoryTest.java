@@ -62,7 +62,7 @@ public class UserRepositoryTest {
         @Test
         public void shouldGetThree() {
             List<User> usersFromRepository = userRepository.findAllByIdIn(List.of(user1.getId(), user2.getId(),
-                    user3.getId()), pageable).toList();
+                    user3.getId()), pageable);
 
             assertEquals(3, usersFromRepository.size());
 
@@ -77,7 +77,7 @@ public class UserRepositoryTest {
 
         @Test
         public void shouldGetOne() {
-            List<User> usersFromRepository = userRepository.findAllByIdIn(List.of(user3.getId()), pageable).toList();
+            List<User> usersFromRepository = userRepository.findAllByIdIn(List.of(user3.getId()), pageable);
 
             assertEquals(1, usersFromRepository.size());
 
@@ -88,7 +88,7 @@ public class UserRepositoryTest {
 
         @Test
         public void shouldGetEmpty() {
-            List<User> usersFromRepository = userRepository.findAllByIdIn(List.of(99L), pageable).toList();
+            List<User> usersFromRepository = userRepository.findAllByIdIn(List.of(99L), pageable);
 
             assertTrue(usersFromRepository.isEmpty());
         }
@@ -96,7 +96,7 @@ public class UserRepositoryTest {
         @Test
         public void shouldGetOneByPageable() {
             List<User> usersFromRepository = userRepository.findAllByIdIn(List.of(user1.getId(), user2.getId(),
-                    user3.getId()), PageRequest.of(1, 2)).toList();
+                    user3.getId()), PageRequest.of(1, 2));
 
             assertEquals(1, usersFromRepository.size());
 

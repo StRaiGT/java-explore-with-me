@@ -125,7 +125,7 @@ public class UserServiceImplTest {
         public void shouldGetTwoById() {
             when(userMapper.toUserDto(any())).thenCallRealMethod();
             when(userRepository.findAllByIdIn(List.of(user1.getId(), user2.getId()), pageable))
-                    .thenReturn(new PageImpl<>(List.of(user1, user2)));
+                    .thenReturn(List.of(user1, user2));
 
             List<UserDto> usersDtoFromService = userService.getUsers(List.of(user1.getId(), user2.getId()), pageable);
 
@@ -141,7 +141,7 @@ public class UserServiceImplTest {
         public void shouldGetOneById() {
             when(userMapper.toUserDto(any())).thenCallRealMethod();
             when(userRepository.findAllByIdIn(List.of(user2.getId()), pageable))
-                    .thenReturn(new PageImpl<>(List.of(user2)));
+                    .thenReturn(List.of(user2));
 
             List<UserDto> usersDtoFromService = userService.getUsers(List.of(user2.getId()), pageable);
 
@@ -155,7 +155,7 @@ public class UserServiceImplTest {
         @Test
         public void shouldGetEmptyIfIdNotFound() {
             when(userRepository.findAllByIdIn(List.of(99L), pageable))
-                    .thenReturn(new PageImpl<>(List.of()));
+                    .thenReturn(List.of());
 
             List<UserDto> usersDtoFromService = userService.getUsers(List.of(99L), pageable);
 

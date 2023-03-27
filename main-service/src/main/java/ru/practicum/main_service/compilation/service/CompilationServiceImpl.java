@@ -12,10 +12,8 @@ import ru.practicum.main_service.compilation.mapper.CompilationMapper;
 import ru.practicum.main_service.compilation.model.Compilation;
 import ru.practicum.main_service.compilation.repository.CompilationRepository;
 import ru.practicum.main_service.event.dto.EventShortDto;
-import ru.practicum.main_service.event.mapper.EventMapper;
 import ru.practicum.main_service.event.model.Event;
 import ru.practicum.main_service.event.service.EventService;
-import ru.practicum.main_service.event.service.StatsService;
 import ru.practicum.main_service.exception.NotFoundException;
 
 import java.util.ArrayList;
@@ -24,17 +22,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Slf4j
 public class CompilationServiceImpl implements CompilationService {
-    private final StatsService statsService;
     private final EventService eventService;
     private final CompilationRepository compilationRepository;
-    private final EventMapper eventMapper;
     private final CompilationMapper compilationMapper;
 
     @Override
@@ -46,10 +41,7 @@ public class CompilationServiceImpl implements CompilationService {
 
         if (!newCompilationDto.getEvents().isEmpty()) {
             events = eventService.getEventsByIds(newCompilationDto.getEvents());
-
-            if (events.size() != newCompilationDto.getEvents().size()) {
-                throw new NotFoundException("Некоторые события не найдены.");
-            }
+            checkSize(events, newCompilationDto.getEvents());
         }
 
         Compilation compilation = compilationRepository.save(compilationMapper.newDtoToCompilation(newCompilationDto, events));
@@ -62,8 +54,7 @@ public class CompilationServiceImpl implements CompilationService {
     public CompilationDto patch(Long compId, UpdateCompilationRequest updateCompilationRequest) {
         log.info("Обновление подборки событий с id {} и новыми параметрами {}", compId, updateCompilationRequest);
 
-        Compilation compilation = compilationRepository.findById(compId)
-                .orElseThrow(() -> new NotFoundException("Подборки с таким id не существует."));
+        Compilation compilation = getCompilationById(compId);
 
         if (updateCompilationRequest.getTitle() != null) {
             compilation.setTitle(updateCompilationRequest.getTitle());
@@ -76,9 +67,7 @@ public class CompilationServiceImpl implements CompilationService {
         if (updateCompilationRequest.getEvents() != null) {
             List<Event> events = eventService.getEventsByIds(updateCompilationRequest.getEvents());
 
-            if (events.size() != updateCompilationRequest.getEvents().size()) {
-                throw new NotFoundException("Некоторые события не найдены.");
-            }
+            checkSize(events, updateCompilationRequest.getEvents());
 
             compilation.setEvents(events);
         }
@@ -93,8 +82,7 @@ public class CompilationServiceImpl implements CompilationService {
     public void deleteById(Long compId) {
         log.info("Удаление подборки событий с id {}", compId);
 
-        compilationRepository.findById(compId)
-                .orElseThrow(() -> new NotFoundException("Подборки с таким id не существует."));
+        getCompilationById(compId);
 
         compilationRepository.deleteById(compId);
     }
@@ -108,29 +96,21 @@ public class CompilationServiceImpl implements CompilationService {
         if (pinned == null) {
             compilations = compilationRepository.findAll(pageable).toList();
         } else {
-            compilations = compilationRepository.findAllByPinned(pinned, pageable).toList();
+            compilations = compilationRepository.findAllByPinned(pinned, pageable);
         }
 
         Set<Event> uniqueEvents = new HashSet<>();
         compilations.forEach(compilation -> uniqueEvents.addAll(compilation.getEvents()));
 
-        Map<Long, Long> views = statsService.getViews(new ArrayList<>(uniqueEvents));
-        Map<Long, Long> confirmedRequests = statsService.getConfirmedRequests(new ArrayList<>(uniqueEvents));
-
         Map<Long, EventShortDto> eventsShortDto = new HashMap<>();
-        uniqueEvents.forEach((event) -> eventsShortDto.put(
-                event.getId(),
-                eventMapper.toEventShortDto(
-                        event,
-                        confirmedRequests.getOrDefault(event.getId(), 0L),
-                        views.getOrDefault(event.getId(), 0L))));
+        eventService.toEventsShortDto(new ArrayList<>(uniqueEvents))
+                .forEach(event -> eventsShortDto.put(event.getId(), event));
 
         List<CompilationDto> result = new ArrayList<>();
         compilations.forEach(compilation -> {
             List<EventShortDto> compEventsShortDto = new ArrayList<>();
-            compilation.getEvents().forEach(
-                    event -> compEventsShortDto.add(eventsShortDto.get(event.getId()))
-            );
+            compilation.getEvents()
+                    .forEach(event -> compEventsShortDto.add(eventsShortDto.get(event.getId())));
             result.add(compilationMapper.toCompilationDto(compilation, compEventsShortDto));
         });
 
@@ -141,19 +121,21 @@ public class CompilationServiceImpl implements CompilationService {
     public CompilationDto getById(Long compId) {
         log.info("Вывод подборки событий с id {}", compId);
 
-        Compilation compilation = compilationRepository.findById(compId)
-                .orElseThrow(() -> new NotFoundException("Подборки с таким id не существует."));
+        Compilation compilation = getCompilationById(compId);
 
-        Map<Long, Long> views = statsService.getViews(compilation.getEvents());
-        Map<Long, Long> confirmedRequests = statsService.getConfirmedRequests(compilation.getEvents());
-
-        List<EventShortDto> eventsShortDto = compilation.getEvents().stream()
-                .map((event) -> eventMapper.toEventShortDto(
-                        event,
-                        confirmedRequests.getOrDefault(event.getId(), 0L),
-                        views.getOrDefault(event.getId(), 0L)))
-                .collect(Collectors.toList());
+        List<EventShortDto> eventsShortDto = eventService.toEventsShortDto(compilation.getEvents());
 
         return compilationMapper.toCompilationDto(compilation, eventsShortDto);
+    }
+
+    private Compilation getCompilationById(Long compId) {
+        return compilationRepository.findById(compId)
+                .orElseThrow(() -> new NotFoundException("Подборки с таким id не существует."));
+    }
+
+    private void checkSize(List<Event> events, List<Long> eventsIdToUpdate) {
+        if (events.size() != eventsIdToUpdate.size()) {
+            throw new NotFoundException("Некоторые события не найдены.");
+        }
     }
 }

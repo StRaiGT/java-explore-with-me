@@ -1,6 +1,5 @@
 package ru.practicum.main_service.compilation;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,16 +22,12 @@ import ru.practicum.main_service.compilation.model.Compilation;
 import ru.practicum.main_service.compilation.repository.CompilationRepository;
 import ru.practicum.main_service.compilation.service.CompilationServiceImpl;
 import ru.practicum.main_service.event.dto.EventShortDto;
-import ru.practicum.main_service.event.mapper.EventMapperImpl;
 import ru.practicum.main_service.event.model.Event;
 import ru.practicum.main_service.event.service.EventService;
-import ru.practicum.main_service.event.service.StatsService;
 import ru.practicum.main_service.exception.NotFoundException;
 import ru.practicum.main_service.user.model.User;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -47,16 +42,10 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class CompilationServiceTest {
     @Mock
-    private StatsService statsService;
-
-    @Mock
     private EventService eventService;
 
     @Mock
     private CompilationRepository compilationRepository;
-
-    @Mock
-    private EventMapperImpl eventMapper;
 
     @Mock
     private CompilationMapperImpl compilationMapper;
@@ -155,14 +144,6 @@ public class CompilationServiceTest {
             .pinned(updatedCompilation1.getPinned())
             .events(List.of(eventShortDto1))
             .build();
-    private static final Map<Long, Long> views = new HashMap<>();
-    private static final Map<Long, Long> confirmedRequests = new HashMap<>();
-
-    @BeforeAll
-    public static void beforeAll() {
-        views.put(2L, 10L);
-        confirmedRequests.put(1L, 10L);
-    }
 
     @Nested
     class Create {
@@ -172,12 +153,7 @@ public class CompilationServiceTest {
             when(compilationMapper.newDtoToCompilation(any(), any())).thenCallRealMethod();
             when(compilationRepository.save(any())).thenReturn(compilation1);
             when(compilationRepository.findById(any())).thenReturn(Optional.of(compilation1));
-            when(statsService.getViews(any())).thenReturn(new HashMap<>());
-            when(statsService.getConfirmedRequests(any())).thenReturn(new HashMap<>());
-            when(eventMapper.toEventShortDto(ArgumentMatchers.eq(event1), ArgumentMatchers.any(), ArgumentMatchers.any()))
-                    .thenReturn(eventShortDto1);
-            when(eventMapper.toEventShortDto(ArgumentMatchers.eq(event2), ArgumentMatchers.any(), ArgumentMatchers.any()))
-                    .thenReturn(eventShortDto2);
+            when(eventService.toEventsShortDto(List.of(event1, event2))).thenReturn(List.of(eventShortDto1, eventShortDto2));
             when(compilationMapper.toCompilationDto(any(), any())).thenCallRealMethod();
 
             CompilationDto savedCompilationDto = compilationService.create(newCompilationDto1);
@@ -188,9 +164,7 @@ public class CompilationServiceTest {
             verify(compilationMapper, times(1)).newDtoToCompilation(any(), any());
             verify(compilationRepository, times(1)).save(compilationArgumentCaptor.capture());
             verify(compilationRepository, times(1)).findById(any());
-            verify(statsService, times(1)).getViews(any());
-            verify(statsService, times(1)).getConfirmedRequests(any());
-            verify(eventMapper, times(2)).toEventShortDto(any(), any(), any());
+            verify(eventService, times(1)).toEventsShortDto(any());
             verify(compilationMapper, times(1)).toCompilationDto(any(), any());
 
             Compilation savedCompilation = compilationArgumentCaptor.getValue();
@@ -204,8 +178,7 @@ public class CompilationServiceTest {
             when(compilationMapper.newDtoToCompilation(any(), any())).thenCallRealMethod();
             when(compilationRepository.save(any())).thenReturn(compilation2);
             when(compilationRepository.findById(any())).thenReturn(Optional.of(compilation2));
-            when(statsService.getViews(any())).thenReturn(new HashMap<>());
-            when(statsService.getConfirmedRequests(any())).thenReturn(new HashMap<>());
+            when(eventService.toEventsShortDto(List.of())).thenReturn(List.of());
             when(compilationMapper.toCompilationDto(any(), any())).thenCallRealMethod();
 
             CompilationDto savedCompilationDto = compilationService.create(newCompilationDto2);
@@ -215,8 +188,7 @@ public class CompilationServiceTest {
             verify(compilationMapper, times(1)).newDtoToCompilation(any(), any());
             verify(compilationRepository, times(1)).save(compilationArgumentCaptor.capture());
             verify(compilationRepository, times(1)).findById(any());
-            verify(statsService, times(1)).getViews(any());
-            verify(statsService, times(1)).getConfirmedRequests(any());
+            verify(eventService, times(1)).toEventsShortDto(any());
             verify(compilationMapper, times(1)).toCompilationDto(any(), any());
 
             Compilation savedCompilation = compilationArgumentCaptor.getValue();
@@ -245,10 +217,7 @@ public class CompilationServiceTest {
             when(compilationRepository.findById(any())).thenReturn(Optional.of(compilation1));
             when(eventService.getEventsByIds(any())).thenReturn(List.of(event1));
             when(compilationRepository.save(any())).thenReturn(updatedCompilation1);
-            when(statsService.getViews(any())).thenReturn(new HashMap<>());
-            when(statsService.getConfirmedRequests(any())).thenReturn(new HashMap<>());
-            when(eventMapper.toEventShortDto(ArgumentMatchers.eq(event1), ArgumentMatchers.any(), ArgumentMatchers.any()))
-                    .thenReturn(eventShortDto2);
+            when(eventService.toEventsShortDto(List.of(event1))).thenReturn(List.of(eventShortDto1));
             when(compilationMapper.toCompilationDto(any(), any())).thenCallRealMethod();
 
             CompilationDto savedCompilationDto = compilationService.patch(compilation1.getId(), updateCompilationRequest1);
@@ -258,9 +227,7 @@ public class CompilationServiceTest {
             verify(compilationRepository, times(2)).findById(any());
             verify(eventService, times(1)).getEventsByIds(any());
             verify(compilationRepository, times(1)).save(compilationArgumentCaptor.capture());
-            verify(statsService, times(1)).getViews(any());
-            verify(statsService, times(1)).getConfirmedRequests(any());
-            verify(eventMapper, times(1)).toEventShortDto(any(), any(), any());
+            verify(eventService, times(1)).toEventsShortDto(any());
             verify(compilationMapper, times(1)).toCompilationDto(any(), any());
 
             Compilation savedCompilation = compilationArgumentCaptor.getValue();
@@ -325,12 +292,7 @@ public class CompilationServiceTest {
         @Test
         public void shouldGetIfPinnedIsNull() {
             when(compilationRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(compilation1, compilation2)));
-            when(statsService.getViews(any())).thenReturn(views);
-            when(statsService.getConfirmedRequests(any())).thenReturn(confirmedRequests);
-            when(eventMapper.toEventShortDto(ArgumentMatchers.eq(event1), ArgumentMatchers.any(), ArgumentMatchers.any()))
-                    .thenReturn(eventShortDto1);
-            when(eventMapper.toEventShortDto(ArgumentMatchers.eq(event2), ArgumentMatchers.any(), ArgumentMatchers.any()))
-                    .thenReturn(eventShortDto2);
+            when(eventService.toEventsShortDto(any())).thenReturn(List.of(eventShortDto1, eventShortDto2));
             when(compilationMapper.toCompilationDto(ArgumentMatchers.eq(compilation1), ArgumentMatchers.any()))
                     .thenCallRealMethod();
             when(compilationMapper.toCompilationDto(ArgumentMatchers.eq(compilation2), ArgumentMatchers.any()))
@@ -339,9 +301,7 @@ public class CompilationServiceTest {
             List<CompilationDto> savedCompilationsDto = compilationService.getAll(null, pageable);
 
             verify(compilationRepository, times(1)).findAll(pageable);
-            verify(statsService, times(1)).getViews(any());
-            verify(statsService, times(1)).getConfirmedRequests(any());
-            verify(eventMapper, times(2)).toEventShortDto(any(), any(), any());
+            verify(eventService, times(1)).toEventsShortDto(any());
             verify(compilationMapper, times(2)).toCompilationDto(any(), any());
 
             assertEquals(2, savedCompilationsDto.size());
@@ -355,17 +315,15 @@ public class CompilationServiceTest {
 
         @Test
         public void shouldGetIfPinnedIsNotNull() {
-            when(compilationRepository.findAllByPinned(compilation2.getPinned(), pageable)).thenReturn(new PageImpl<>(List.of(compilation2)));
-            when(statsService.getViews(any())).thenReturn(views);
-            when(statsService.getConfirmedRequests(any())).thenReturn(confirmedRequests);
+            when(compilationRepository.findAllByPinned(compilation2.getPinned(), pageable)).thenReturn(List.of(compilation2));
+            when(eventService.toEventsShortDto(any())).thenReturn(List.of());
             when(compilationMapper.toCompilationDto(ArgumentMatchers.eq(compilation2), ArgumentMatchers.any()))
                     .thenCallRealMethod();
 
             List<CompilationDto> savedCompilationsDto = compilationService.getAll(compilation2.getPinned(), pageable);
 
             verify(compilationRepository, times(1)).findAllByPinned(any(), any());
-            verify(statsService, times(1)).getViews(any());
-            verify(statsService, times(1)).getConfirmedRequests(any());
+            verify(eventService, times(1)).toEventsShortDto(any());
             verify(compilationMapper, times(1)).toCompilationDto(any(), any());
 
             assertEquals(1, savedCompilationsDto.size());
@@ -381,12 +339,7 @@ public class CompilationServiceTest {
         @Test
         public void shouldGet() {
             when(compilationRepository.findById(compilation1.getId())).thenReturn(Optional.of(compilation1));
-            when(statsService.getViews(any())).thenReturn(views);
-            when(statsService.getConfirmedRequests(any())).thenReturn(confirmedRequests);
-            when(eventMapper.toEventShortDto(ArgumentMatchers.eq(event1), ArgumentMatchers.any(), ArgumentMatchers.any()))
-                    .thenReturn(eventShortDto1);
-            when(eventMapper.toEventShortDto(ArgumentMatchers.eq(event2), ArgumentMatchers.any(), ArgumentMatchers.any()))
-                    .thenReturn(eventShortDto2);
+            when(eventService.toEventsShortDto(compilation1.getEvents())).thenReturn(List.of(eventShortDto1, eventShortDto2));
             when(compilationMapper.toCompilationDto(ArgumentMatchers.eq(compilation1), ArgumentMatchers.any()))
                     .thenCallRealMethod();
 
@@ -395,9 +348,7 @@ public class CompilationServiceTest {
             checkResults(compilationDto1, savedCompilationsDto);
 
             verify(compilationRepository, times(1)).findById(compilation1.getId());
-            verify(statsService, times(1)).getViews(any());
-            verify(statsService, times(1)).getConfirmedRequests(any());
-            verify(eventMapper, times(2)).toEventShortDto(any(), any(), any());
+            verify(eventService, times(1)).toEventsShortDto(any());
             verify(compilationMapper, times(1)).toCompilationDto(any(), any());
         }
 

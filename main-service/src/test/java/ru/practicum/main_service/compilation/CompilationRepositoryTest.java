@@ -105,8 +105,7 @@ public class CompilationRepositoryTest {
         public void shouldGetTwoIfPinnedIsTrue() {
             compilationRepository.save(compilation3);
 
-            List<Compilation> compilationsFromRepository = compilationRepository.findAllByPinned(true, pageable)
-                    .toList();
+            List<Compilation> compilationsFromRepository = compilationRepository.findAllByPinned(true, pageable);
 
             assertEquals(2, compilationsFromRepository.size());
 
@@ -121,8 +120,7 @@ public class CompilationRepositoryTest {
         public void shouldGetOneIfPinnedIsFalse() {
             compilationRepository.save(compilation3);
 
-            List<Compilation> compilationsFromRepository = compilationRepository.findAllByPinned(false, pageable)
-                    .toList();
+            List<Compilation> compilationsFromRepository = compilationRepository.findAllByPinned(false, pageable);
 
             assertEquals(1, compilationsFromRepository.size());
 
@@ -133,8 +131,7 @@ public class CompilationRepositoryTest {
 
         @Test
         public void shouldGetEmptyIfNoPinnedIsFalse() {
-            List<Compilation> compilationsFromRepository = compilationRepository.findAllByPinned(false, pageable)
-                    .toList();
+            List<Compilation> compilationsFromRepository = compilationRepository.findAllByPinned(false, pageable);
 
             assertTrue(compilationsFromRepository.isEmpty());
         }

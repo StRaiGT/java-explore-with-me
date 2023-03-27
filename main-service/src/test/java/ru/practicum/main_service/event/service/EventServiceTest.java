@@ -22,6 +22,7 @@ import ru.practicum.main_service.event.dto.LocationDto;
 import ru.practicum.main_service.event.dto.NewEventDto;
 import ru.practicum.main_service.event.dto.UpdateEventAdminRequest;
 import ru.practicum.main_service.event.dto.UpdateEventUserRequest;
+import ru.practicum.main_service.event.enums.EventSortType;
 import ru.practicum.main_service.event.enums.EventState;
 import ru.practicum.main_service.event.enums.EventStateAction;
 import ru.practicum.main_service.event.mapper.EventMapperImpl;
@@ -205,6 +206,47 @@ public class EventServiceTest {
     }
 
     @Nested
+    class GetEventsByAdmin {
+        @Test
+        public void shouldGet() {
+            when(eventRepository.getEventsByAdmin(List.of(event1.getInitiator().getId()), List.of(event1.getState()),
+                    List.of(event1.getCategory().getId()), event1.getCreatedOn(), event1.getCreatedOn().plusDays(5),
+                    0, 10))
+                    .thenReturn(List.of(event1));
+            when(statsService.getViews(any())).thenReturn(views);
+            when(statsService.getConfirmedRequests(any())).thenReturn(confirmedRequests);
+            when(eventMapper.toEventFullDto(any(), any(), any())).thenReturn(eventFullDto1);
+
+            List<EventFullDto> eventsFullDto = eventService.getEventsByAdmin(List.of(event1.getInitiator().getId()),
+                    List.of(event1.getState()), List.of(event1.getCategory().getId()), event1.getCreatedOn(),
+                    event1.getCreatedOn().plusDays(5), 0, 10);
+
+            assertEquals(1, eventsFullDto.size());
+
+            assertEquals(eventFullDto1, eventsFullDto.get(0));
+
+            verify(eventRepository, times(1))
+                    .getEventsByAdmin(any(), any(), any(), any(), any(), any(), any());
+            verify(statsService, times(1)).getViews(any());
+            verify(statsService, times(1)).getConfirmedRequests(any());
+            verify(eventMapper, times(1)).toEventFullDto(any(), any(), any());
+        }
+
+        @Test
+        public void shouldThrowExceptionIfBadTimeRange() {
+            ForbiddenException exception = assertThrows(ForbiddenException.class,
+                    () -> eventService.getEventsByAdmin(List.of(event1.getInitiator().getId()),
+                            List.of(event1.getState()), List.of(event1.getCategory().getId()), event1.getCreatedOn(),
+                            event1.getCreatedOn().minusMinutes(5), 0, 10));
+            assertEquals(String.format("Field: eventDate. Error: некорректные параметры временного " +
+                    "интервала. Value: rangeStart = %s, rangeEnd = %s", event1.getCreatedOn(),
+                    event1.getCreatedOn().minusMinutes(5)), exception.getMessage());
+
+            verify(eventRepository, never()).getEventsByAdmin(any(), any(), any(), any(), any(), any(), any());
+        }
+    }
+
+    @Nested
     class PatchEventByAdmin {
         @BeforeEach
         public void beforeEach() {
@@ -250,9 +292,7 @@ public class EventServiceTest {
                     .thenReturn(Optional.empty());
             when(locationRepository.save(any())).thenReturn(updatedLocation);
             when(statsService.getConfirmedRequests(any())).thenReturn(confirmedRequests);
-            when(userService.getUserById(event1.getInitiator().getId())).thenReturn(event1.getInitiator());
-            when(eventRepository.findByIdAndInitiatorId(event1.getId(), event1.getInitiator().getId()))
-                    .thenReturn(Optional.of(updatedEvent1));
+            when(eventRepository.save(any())).thenReturn(updatedEvent1);
             when(statsService.getViews(any())).thenReturn(views);
             when(eventMapper.toEventFullDto(any(), any(), any())).thenReturn(eventFullDto1);
 
@@ -267,8 +307,6 @@ public class EventServiceTest {
             verify(locationRepository, times(1)).save(any());
             verify(statsService, times(2)).getConfirmedRequests(any());
             verify(eventRepository, times(1)).save(eventArgumentCaptor.capture());
-            verify(userService, times(1)).getUserById(any());
-            verify(eventRepository, times(1)).findByIdAndInitiatorId(any(), any());
             verify(statsService, times(1)).getViews(any());
             verify(eventMapper, times(1)).toEventFullDto(any(), any(), any());
 
@@ -290,9 +328,7 @@ public class EventServiceTest {
                     .thenReturn(Optional.empty());
             when(locationRepository.save(any())).thenReturn(updatedLocation);
             when(statsService.getConfirmedRequests(any())).thenReturn(confirmedRequests);
-            when(userService.getUserById(event1.getInitiator().getId())).thenReturn(event1.getInitiator());
-            when(eventRepository.findByIdAndInitiatorId(event1.getId(), event1.getInitiator().getId()))
-                    .thenReturn(Optional.of(updatedEvent1));
+            when(eventRepository.save(any())).thenReturn(updatedEvent1);
             when(statsService.getViews(any())).thenReturn(views);
             when(eventMapper.toEventFullDto(any(), any(), any())).thenReturn(eventFullDto1);
 
@@ -307,8 +343,6 @@ public class EventServiceTest {
             verify(locationRepository, times(1)).save(any());
             verify(statsService, times(2)).getConfirmedRequests(any());
             verify(eventRepository, times(1)).save(eventArgumentCaptor.capture());
-            verify(userService, times(1)).getUserById(any());
-            verify(eventRepository, times(1)).findByIdAndInitiatorId(any(), any());
             verify(statsService, times(1)).getViews(any());
             verify(eventMapper, times(1)).toEventFullDto(any(), any(), any());
 
@@ -330,9 +364,7 @@ public class EventServiceTest {
                     .thenReturn(Optional.empty());
             when(locationRepository.save(any())).thenReturn(updatedLocation);
             when(statsService.getConfirmedRequests(any())).thenReturn(confirmedRequests);
-            when(userService.getUserById(event1.getInitiator().getId())).thenReturn(event1.getInitiator());
-            when(eventRepository.findByIdAndInitiatorId(event1.getId(), event1.getInitiator().getId()))
-                    .thenReturn(Optional.of(updatedEvent1));
+            when(eventRepository.save(any())).thenReturn(updatedEvent1);
             when(statsService.getViews(any())).thenReturn(views);
             when(eventMapper.toEventFullDto(any(), any(), any())).thenReturn(eventFullDto1);
 
@@ -345,10 +377,8 @@ public class EventServiceTest {
             verify(locationMapper, times(1)).toLocation(any());
             verify(locationRepository, times(1)).findByLatAndLon(any(), any());
             verify(locationRepository, times(1)).save(any());
-            verify(statsService, times(1)).getConfirmedRequests(any());
+            verify(statsService, times(2)).getConfirmedRequests(any());
             verify(eventRepository, times(1)).save(eventArgumentCaptor.capture());
-            verify(userService, times(1)).getUserById(any());
-            verify(eventRepository, times(1)).findByIdAndInitiatorId(any(), any());
             verify(statsService, times(1)).getViews(any());
             verify(eventMapper, times(1)).toEventFullDto(any(), any(), any());
 
@@ -363,8 +393,8 @@ public class EventServiceTest {
 
             ForbiddenException exception = assertThrows(ForbiddenException.class,
                     () -> eventService.patchEventByAdmin(event1.getId(), updateEventAdminRequest));
-            assertEquals(String.format("Field: eventDate. Error: не может быть ранее, чем через " +
-                    "один час от текущего момента. Value: %s", updateEventAdminRequest.getEventDate()), exception.getMessage());
+            assertEquals(String.format("Field: eventDate. Error: остается слишком мало времени для " +
+                    "подготовки. Value: %s", updateEventAdminRequest.getEventDate()), exception.getMessage());
 
             verify(eventRepository, never()).save(any());
         }
@@ -511,8 +541,8 @@ public class EventServiceTest {
 
             ForbiddenException exception = assertThrows(ForbiddenException.class,
                     () -> eventService.createEventByPrivate(event1.getInitiator().getId(), newEventDto));
-            assertEquals(String.format("Field: eventDate. Error: не может быть ранее, чем через " +
-                    "два часа от текущего момента. Value: %s", newEventDto.getEventDate()), exception.getMessage());
+            assertEquals(String.format("Field: eventDate. Error: остается слишком мало времени для " +
+                    "подготовки. Value: %s", newEventDto.getEventDate()), exception.getMessage());
 
             verify(eventRepository, never()).save(any());
         }
@@ -525,6 +555,7 @@ public class EventServiceTest {
             when(userService.getUserById(event1.getInitiator().getId())).thenReturn(event1.getInitiator());
             when(eventRepository.findByIdAndInitiatorId(event1.getId(), event1.getInitiator().getId()))
                     .thenReturn(Optional.of(event1));
+            when(eventRepository.save(any())).thenReturn(event1);
             when(statsService.getConfirmedRequests(any())).thenReturn(confirmedRequests);
             when(statsService.getViews(any())).thenReturn(views);
             when(eventMapper.toEventFullDto(any(), any(), any())).thenReturn(eventFullDto1);
@@ -610,8 +641,8 @@ public class EventServiceTest {
 
             assertEquals(eventFullDto1, eventFullDto);
 
-            verify(userService, times(2)).getUserById(any());
-            verify(eventRepository, times(2)).findByIdAndInitiatorId(any(), any());
+            verify(userService, times(1)).getUserById(any());
+            verify(eventRepository, times(1)).findByIdAndInitiatorId(any(), any());
             verify(categoryService, times(1)).getCategoryById(any());
             verify(locationMapper, times(1)).toLocation(any());
             verify(locationRepository, times(1)).findByLatAndLon(any(), any());
@@ -649,8 +680,8 @@ public class EventServiceTest {
 
             assertEquals(eventFullDto1, eventFullDto);
 
-            verify(userService, times(2)).getUserById(any());
-            verify(eventRepository, times(2)).findByIdAndInitiatorId(any(), any());
+            verify(userService, times(1)).getUserById(any());
+            verify(eventRepository, times(1)).findByIdAndInitiatorId(any(), any());
             verify(categoryService, times(1)).getCategoryById(any());
             verify(locationMapper, times(1)).toLocation(any());
             verify(locationRepository, times(1)).findByLatAndLon(any(), any());
@@ -672,8 +703,8 @@ public class EventServiceTest {
             ForbiddenException exception = assertThrows(ForbiddenException.class,
                     () -> eventService.patchEventByPrivate(event1.getInitiator().getId(), event1.getId(),
                             updateEventUserRequest));
-            assertEquals(String.format("Field: eventDate. Error: не может быть ранее, чем через " +
-                    "два часа от текущего момента. Value: %s", updateEventUserRequest.getEventDate()), exception.getMessage());
+            assertEquals(String.format("Field: eventDate. Error: остается слишком мало времени для " +
+                    "подготовки. Value: %s", updateEventUserRequest.getEventDate()), exception.getMessage());
         }
 
         @Test
@@ -704,6 +735,48 @@ public class EventServiceTest {
 
             verify(userService, times(1)).getUserById(any());
             verify(eventRepository, times(1)).findByIdAndInitiatorId(any(), any());
+        }
+    }
+
+    @Nested
+    class GetEventsByPublic {
+        @Test
+        public void shouldGet() {
+            String text = "some text";
+
+            when(eventRepository.getEventsByPublic(text, List.of(event1.getCategory().getId()), false,
+                    event1.getCreatedOn(), event1.getCreatedOn().plusDays(5), 0, 10))
+                    .thenReturn(List.of(event1));
+            when(statsService.getViews(any())).thenReturn(views);
+            when(statsService.getConfirmedRequests(any())).thenReturn(confirmedRequests);
+            when(eventMapper.toEventShortDto(any(), any(), any())).thenReturn(eventShortDto1);
+
+            List<EventShortDto> eventShortsDto = eventService.getEventsByPublic(text, List.of(event1.getCategory().getId()),
+                    false, event1.getCreatedOn(), event1.getCreatedOn().plusDays(5), true,
+                    EventSortType.EVENT_DATE, 0, 10, new MockHttpServletRequest());
+
+            assertEquals(1, eventShortsDto.size());
+
+            assertEquals(eventShortDto1, eventShortsDto.get(0));
+
+            verify(eventRepository, times(1))
+                    .getEventsByPublic(any(), any(), any(), any(), any(), any(), any());
+            verify(statsService, times(1)).getViews(any());
+            verify(statsService, times(1)).getConfirmedRequests(any());
+            verify(eventMapper, times(1)).toEventShortDto(any(), any(), any());
+        }
+
+        @Test
+        public void shouldThrowExceptionIfBadTimeRange() {
+            ForbiddenException exception = assertThrows(ForbiddenException.class,
+                    () -> eventService.getEventsByPublic("some text", List.of(event1.getCategory().getId()),
+                            false, event1.getCreatedOn(), event1.getCreatedOn().minusMinutes(5), true,
+                            EventSortType.EVENT_DATE, 0, 10, new MockHttpServletRequest()));
+            assertEquals(String.format("Field: eventDate. Error: некорректные параметры временного " +
+                            "интервала. Value: rangeStart = %s, rangeEnd = %s", event1.getCreatedOn(),
+                    event1.getCreatedOn().minusMinutes(5)), exception.getMessage());
+
+            verify(eventRepository, never()).getEventsByPublic(any(), any(), any(), any(), any(), any(), any());
         }
     }
 

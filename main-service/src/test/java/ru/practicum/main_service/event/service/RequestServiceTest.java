@@ -204,12 +204,18 @@ public class RequestServiceTest {
 
     @Nested
     class CreateEventRequest {
+        @BeforeEach
+        public void beforeEach() {
+            confirmedRequests = new HashMap<>();
+            confirmedRequests.put(2L, 2L);
+        }
+
         @Test
         public void shouldCreatePending() {
             when(userService.getUserById(user2.getId())).thenReturn(user2);
             when(eventService.getEventById(event2.getId())).thenReturn(event2);
             when(requestRepository.findByEventIdAndRequesterId(event2.getId(), user2.getId())).thenReturn(Optional.empty());
-            when(requestRepository.findAllByEventIdAndStatus(event2.getId(), RequestStatus.CONFIRMED)).thenReturn(List.of());
+            when(statsService.getConfirmedRequests(List.of(event2))).thenReturn(new HashMap<>());
             when(requestRepository.save(any())).thenReturn(request4);
             when(requestMapper.toParticipationRequestDto(any())).thenCallRealMethod();
 
@@ -220,7 +226,7 @@ public class RequestServiceTest {
             verify(userService, times(1)).getUserById(any());
             verify(eventService, times(1)).getEventById(any());
             verify(requestRepository, times(1)).findByEventIdAndRequesterId(any(), any());
-            verify(requestRepository, times(1)).findAllByEventIdAndStatus(any(), any());
+            verify(statsService, times(1)).getConfirmedRequests(any());
             verify(requestRepository, times(1)).save(requestArgumentCaptor.capture());
             verify(requestMapper, times(1)).toParticipationRequestDto(any());
 
@@ -238,7 +244,7 @@ public class RequestServiceTest {
             when(userService.getUserById(user2.getId())).thenReturn(user2);
             when(eventService.getEventById(event3.getId())).thenReturn(event3);
             when(requestRepository.findByEventIdAndRequesterId(event3.getId(), user2.getId())).thenReturn(Optional.empty());
-            when(requestRepository.findAllByEventIdAndStatus(event3.getId(), RequestStatus.CONFIRMED)).thenReturn(List.of());
+            when(statsService.getConfirmedRequests(List.of(event3))).thenReturn(new HashMap<>());
             when(requestRepository.save(any())).thenReturn(request2);
             when(requestMapper.toParticipationRequestDto(any())).thenCallRealMethod();
 
@@ -249,7 +255,7 @@ public class RequestServiceTest {
             verify(userService, times(1)).getUserById(any());
             verify(eventService, times(1)).getEventById(any());
             verify(requestRepository, times(1)).findByEventIdAndRequesterId(any(), any());
-            verify(requestRepository, times(1)).findAllByEventIdAndStatus(any(), any());
+            verify(statsService, times(1)).getConfirmedRequests(any());
             verify(requestRepository, times(1)).save(requestArgumentCaptor.capture());
             verify(requestMapper, times(1)).toParticipationRequestDto(any());
 
@@ -312,17 +318,17 @@ public class RequestServiceTest {
             when(userService.getUserById(user2.getId())).thenReturn(user2);
             when(eventService.getEventById(event2.getId())).thenReturn(event2);
             when(requestRepository.findByEventIdAndRequesterId(event2.getId(), user2.getId())).thenReturn(Optional.empty());
-            when(requestRepository.findAllByEventIdAndStatus(event2.getId(), RequestStatus.CONFIRMED))
-                    .thenReturn(List.of(request1, request4));
+            when(statsService.getConfirmedRequests(List.of(event2))).thenReturn(confirmedRequests);
 
             ForbiddenException exception = assertThrows(ForbiddenException.class,
                     () -> requestService.createEventRequest(user2.getId(), event2.getId()));
-            assertEquals("Достигнут лимит подтвержденных запросов на участие.", exception.getMessage());
+            assertEquals(String.format("Достигнут лимит подтвержденных запросов на участие: %s",
+                    event2.getParticipantLimit()), exception.getMessage());
 
             verify(userService, times(1)).getUserById(any());
             verify(eventService, times(1)).getEventById(any());
             verify(requestRepository, times(1)).findByEventIdAndRequesterId(any(), any());
-            verify(requestRepository, times(1)).findAllByEventIdAndStatus(any(), any());
+            verify(statsService, times(1)).getConfirmedRequests(any());
             verify(requestRepository, never()).save(any());
         }
     }
@@ -379,7 +385,7 @@ public class RequestServiceTest {
 
             ForbiddenException exception = assertThrows(ForbiddenException.class,
                     () -> requestService.cancelEventRequest(user2.getId(), request3.getId()));
-            assertEquals("Пользователь не является владельцем запроса на участие.", exception.getMessage());
+            assertEquals("Пользователь не является владельцем.", exception.getMessage());
 
             verify(userService, times(1)).getUserById(any());
             verify(requestRepository, times(1)).findById(any());
@@ -428,7 +434,7 @@ public class RequestServiceTest {
 
             ForbiddenException exception = assertThrows(ForbiddenException.class,
                     () -> requestService.getEventRequestsByEventOwner(user2.getId(), event1.getId()));
-            assertEquals("Пользователь не является владельцем события.", exception.getMessage());
+            assertEquals("Пользователь не является владельцем.", exception.getMessage());
 
 
             verify(userService, times(1)).getUserById(any());
@@ -504,10 +510,13 @@ public class RequestServiceTest {
                     event2.getId(), eventRequestStatusUpdateRequest);
 
             assertEquals(1, result.getConfirmedRequests().size());
+            assertEquals(1, result.getRejectedRequests().size());
 
-            ParticipationRequestDto participationRequestDto = result.getConfirmedRequests().get(0);
+            ParticipationRequestDto confirmedRequestsDto = result.getConfirmedRequests().get(0);
+            ParticipationRequestDto rejectedRequestsDto = result.getRejectedRequests().get(0);
 
-            assertEquals(request4.getId(), participationRequestDto.getId());
+            assertEquals(request4.getId(), confirmedRequestsDto.getId());
+            assertEquals(request3.getId(), rejectedRequestsDto.getId());
 
             verify(userService, times(1)).getUserById(any());
             verify(eventService, times(1)).getEventById(any());
@@ -515,7 +524,7 @@ public class RequestServiceTest {
             verify(statsService, times(1)).getConfirmedRequests(any());
             verify(requestRepository, times(2)).saveAll(requestsArgumentCaptor.capture());
             verify(requestRepository, times(1)).findAllByEventIdAndStatus(any(), any());
-            verify(requestMapper, times(1)).toParticipationRequestDto(any());
+            verify(requestMapper, times(2)).toParticipationRequestDto(any());
 
             List<List<Request>> savedRequests = requestsArgumentCaptor.getAllValues();
 
@@ -551,7 +560,7 @@ public class RequestServiceTest {
             ForbiddenException exception = assertThrows(ForbiddenException.class,
                     () -> requestService.patchEventRequestsByEventOwner(user2.getId(), event2.getId(),
                             eventRequestStatusUpdateRequest));
-            assertEquals("Пользователь не является владельцем события.", exception.getMessage());
+            assertEquals("Пользователь не является владельцем.", exception.getMessage());
 
 
             verify(userService, times(1)).getUserById(any());
@@ -608,7 +617,8 @@ public class RequestServiceTest {
             ForbiddenException exception = assertThrows(ForbiddenException.class,
                     () -> requestService.patchEventRequestsByEventOwner(user1.getId(), event2.getId(),
                             eventRequestStatusUpdateRequest));
-            assertEquals("Достигнут лимит подтвержденных запросов на участие.", exception.getMessage());
+            assertEquals(String.format("Достигнут лимит подтвержденных запросов на участие: %s",
+                    event2.getParticipantLimit()), exception.getMessage());
 
             verify(userService, times(1)).getUserById(any());
             verify(eventService, times(1)).getEventById(any());

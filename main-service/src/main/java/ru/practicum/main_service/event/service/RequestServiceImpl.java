@@ -43,9 +43,7 @@ public class RequestServiceImpl implements RequestService {
 
         userService.getUserById(userId);
 
-        return requestRepository.findAllByRequesterId(userId).stream()
-                .map(requestMapper::toParticipationRequestDto)
-                .collect(Collectors.toList());
+        return toParticipationRequestsDto(requestRepository.findAllByRequesterId(userId));
     }
 
     @Override
@@ -70,11 +68,10 @@ public class RequestServiceImpl implements RequestService {
             throw new ForbiddenException("Создавать повторный запрос запрещено.");
         }
 
-        if ((event.getParticipantLimit() != 0) &&
-                (requestRepository.findAllByEventIdAndStatus(eventId, RequestStatus.CONFIRMED).size() >=
-                        event.getParticipantLimit())) {
-            throw new ForbiddenException("Достигнут лимит подтвержденных запросов на участие.");
-        }
+        checkIsNewLimitGreaterOld(
+                statsService.getConfirmedRequests(List.of(event)).getOrDefault(eventId, 0L) + 1,
+                event.getParticipantLimit()
+        );
 
         Request newRequest = Request.builder()
                 .event(event)
@@ -101,9 +98,7 @@ public class RequestServiceImpl implements RequestService {
         Request request = requestRepository.findById(requestId)
                 .orElseThrow(() -> new NotFoundException("Заявки на участие с таким id не существует."));
 
-        if (!Objects.equals(request.getRequester().getId(), userId)) {
-            throw new ForbiddenException("Пользователь не является владельцем запроса на участие.");
-        }
+        checkUserIsOwner(request.getRequester().getId(), userId);
 
         request.setStatus(RequestStatus.CANCELED);
 
@@ -117,14 +112,9 @@ public class RequestServiceImpl implements RequestService {
         userService.getUserById(userId);
         Event event = eventService.getEventById(eventId);
 
-        if (!Objects.equals(event.getInitiator().getId(), userId)) {
-            throw new ForbiddenException("Пользователь не является владельцем события.");
-        }
+        checkUserIsOwner(event.getInitiator().getId(), userId);
 
-        return requestRepository.findAllByEventId(eventId)
-                .stream()
-                .map(requestMapper::toParticipationRequestDto)
-                .collect(Collectors.toList());
+        return toParticipationRequestsDto(requestRepository.findAllByEventId(eventId));
     }
 
     @Override
@@ -137,9 +127,7 @@ public class RequestServiceImpl implements RequestService {
         userService.getUserById(userId);
         Event event = eventService.getEventById(eventId);
 
-        if (!Objects.equals(event.getInitiator().getId(), userId)) {
-            throw new ForbiddenException("Пользователь не является владельцем события.");
-        }
+        checkUserIsOwner(event.getInitiator().getId(), userId);
 
         if (!event.getRequestModeration() ||
                 event.getParticipantLimit() == 0 ||
@@ -163,36 +151,48 @@ public class RequestServiceImpl implements RequestService {
         }
 
         if (eventRequestStatusUpdateRequest.getStatus().equals(RequestStatusAction.REJECTED)) {
-            requests.forEach(request -> request.setStatus(RequestStatus.REJECTED));
-            requestRepository.saveAll(requests);
-            rejectedList.addAll(requests);
+            rejectedList.addAll(changeStatusAndSave(requests, RequestStatus.REJECTED));
         } else {
-            Long confirmedRequests = statsService.getConfirmedRequests(List.of(event)).getOrDefault(eventId, 0L);
+            Long newConfirmedRequests = statsService.getConfirmedRequests(List.of(event)).getOrDefault(eventId, 0L) +
+                    eventRequestStatusUpdateRequest.getRequestIds().size();
 
-            if ((confirmedRequests + eventRequestStatusUpdateRequest.getRequestIds().size()) > event.getParticipantLimit()) {
-                throw new ForbiddenException("Достигнут лимит подтвержденных запросов на участие.");
-            }
+            checkIsNewLimitGreaterOld(newConfirmedRequests, event.getParticipantLimit());
 
-            requests.forEach(request -> request.setStatus(RequestStatus.CONFIRMED));
-            requestRepository.saveAll(requests);
-            confirmedList.addAll(requests);
+            confirmedList.addAll(changeStatusAndSave(requests, RequestStatus.CONFIRMED));
 
-            if ((confirmedRequests + eventRequestStatusUpdateRequest.getRequestIds().size()) >= event.getParticipantLimit()) {
-                List<Request> pendingRequests = requestRepository.findAllByEventIdAndStatus(eventId, RequestStatus.PENDING);
-                if (!pendingRequests.isEmpty()) {
-                    pendingRequests.forEach(request -> request.setStatus(RequestStatus.REJECTED));
-                    requestRepository.saveAll(pendingRequests);
-                }
+            if (newConfirmedRequests >= event.getParticipantLimit()) {
+                rejectedList.addAll(changeStatusAndSave(
+                        requestRepository.findAllByEventIdAndStatus(eventId, RequestStatus.PENDING),
+                        RequestStatus.REJECTED)
+                );
             }
         }
 
-        List<ParticipationRequestDto> confirmedListDto = confirmedList.stream()
-                .map(requestMapper::toParticipationRequestDto)
-                .collect(Collectors.toList());
+        return new EventRequestStatusUpdateResult(toParticipationRequestsDto(confirmedList),
+                toParticipationRequestsDto(rejectedList));
+    }
 
-        List<ParticipationRequestDto> rejectedListDto = rejectedList.stream()
+    private List<ParticipationRequestDto> toParticipationRequestsDto(List<Request> requests) {
+        return requests.stream()
                 .map(requestMapper::toParticipationRequestDto)
                 .collect(Collectors.toList());
-        return new EventRequestStatusUpdateResult(confirmedListDto, rejectedListDto);
+    }
+
+    private List<Request> changeStatusAndSave(List<Request> requests, RequestStatus status) {
+        requests.forEach(request -> request.setStatus(status));
+        return requestRepository.saveAll(requests);
+    }
+
+    private void checkIsNewLimitGreaterOld(Long newLimit, Integer eventParticipantLimit) {
+        if (eventParticipantLimit != 0 && (newLimit > eventParticipantLimit)) {
+            throw new ForbiddenException(String.format("Достигнут лимит подтвержденных запросов на участие: %d",
+                    eventParticipantLimit));
+        }
+    }
+
+    private void checkUserIsOwner(Long id, Long userId) {
+        if (!Objects.equals(id, userId)) {
+            throw new ForbiddenException("Пользователь не является владельцем.");
+        }
     }
 }

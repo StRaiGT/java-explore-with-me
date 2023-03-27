@@ -79,26 +79,6 @@ public class CompilationMapperTest {
     }
 
     @Nested
-    class UpdateDtoToCompilation {
-        @Test
-        public void shouldReturnCompilation() {
-            Compilation result = compilationMapper.updateDtoToCompilation(updateCompilationRequest, List.of(event1, event2));
-
-            assertNull(result.getId());
-            assertEquals(compilation.getTitle(), result.getTitle());
-            assertEquals(compilation.getPinned(), result.getPinned());
-            assertEquals(compilation.getEvents(), result.getEvents());
-        }
-
-        @Test
-        public void shouldReturnNull() {
-            Compilation result = compilationMapper.updateDtoToCompilation(null, null);
-
-            assertNull(result);
-        }
-    }
-
-    @Nested
     class ToCompilationDto {
         @Test
         public void shouldReturnCompilationDto() {
