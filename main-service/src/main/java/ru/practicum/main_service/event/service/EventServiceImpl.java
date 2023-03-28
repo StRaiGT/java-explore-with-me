@@ -310,6 +310,8 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<EventShortDto> toEventsShortDto(List<Event> events) {
+        log.info("Преобразование в EventShortDto списка событий events {}", events);
+
         Map<Long, Long> views = statsService.getViews(events);
         Map<Long, Long> confirmedRequests = statsService.getConfirmedRequests(events);
 

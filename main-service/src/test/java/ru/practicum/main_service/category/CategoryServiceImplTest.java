@@ -80,7 +80,6 @@ public class CategoryServiceImplTest {
             when(categoryMapper.toCategoryDto(any())).thenCallRealMethod();
             when(categoryRepository.save(any())).thenReturn(category1);
 
-
             CategoryDto savedCategoryDto = categoryService.create(newCategoryDto);
 
             checkResult(category1, savedCategoryDto);
