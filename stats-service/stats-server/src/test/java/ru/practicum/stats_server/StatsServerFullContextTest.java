@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SpringBootTest
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-public class StatsFullContextTest {
+public class StatsServerFullContextTest {
     private final StatsController statsController;
     private final StatsService statsService;
 

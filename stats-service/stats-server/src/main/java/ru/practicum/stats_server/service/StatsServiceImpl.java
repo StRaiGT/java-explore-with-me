@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.stats_common.CommonUtils;
+import ru.practicum.stats_common.StatsCommonUtils;
 import ru.practicum.stats_common.model.EndpointHit;
 import ru.practicum.stats_common.model.ViewStats;
 import ru.practicum.stats_server.mapper.StatsMapper;
@@ -27,7 +27,7 @@ public class StatsServiceImpl implements StatsService {
         log.info("Регистрация обращения к {}", endpointHit);
 
         statsRepository.save(statsMapper.toStats(endpointHit,
-                LocalDateTime.parse(endpointHit.getTimestamp(), CommonUtils.DT_FORMATTER)));
+                LocalDateTime.parse(endpointHit.getTimestamp(), StatsCommonUtils.DT_FORMATTER)));
     }
 
     @Override

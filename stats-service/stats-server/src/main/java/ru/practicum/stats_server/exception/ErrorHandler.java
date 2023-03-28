@@ -1,5 +1,6 @@
 package ru.practicum.stats_server.exception;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -17,12 +18,9 @@ import java.time.format.DateTimeParseException;
 @Slf4j
 public class ErrorHandler {
     @Getter
+    @AllArgsConstructor
     private static class ErrorResponse {
         private final String error;
-
-        public ErrorResponse(String error) {
-            this.error = error;
-        }
     }
 
     @ExceptionHandler({
@@ -31,7 +29,8 @@ public class ErrorHandler {
             DataIntegrityViolationException.class,
             MethodArgumentTypeMismatchException.class,
             IllegalArgumentException.class,
-            MissingServletRequestParameterException.class
+            MissingServletRequestParameterException.class,
+            ClassCastException.class
     })
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleBadRequest(final Throwable exception) {

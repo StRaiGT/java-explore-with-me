@@ -4,4 +4,4 @@ CREATE TABLE IF NOT EXISTS stats (
     user_ip VARCHAR(15) NOT NULL,
     created TIMESTAMP NOT NULL,
     uri VARCHAR(255) NOT NULL
-    );
+);
