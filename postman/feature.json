@@ -255,13 +255,20 @@
 							"let founded;\r",
 							"target.forEach(function(element){if (element.id == source.id) founded = element});\r",
 							"\r",
+							"console.log('source:');\r",
+							"console.log(source);\r",
+							"console.log('target:');\r",
+							"console.log(target);\r",
+							"console.log('founded:');\r",
+							"console.log(founded);\r",
+							"\r",
 							"pm.test(\"Комментарий должен содержать поля: id, text, author, eventId, createdOn, editedOn\", function () {\r",
-							"    pm.expect(founded).to.have.property('id');\r",
-							"    pm.expect(founded).to.have.property('text');\r",
-							"    pm.expect(founded).to.have.property('author');\r",
-							"    pm.expect(founded).to.have.property('eventId');\r",
-							"    pm.expect(founded).to.have.property('createdOn');\r",
-							"    pm.expect(founded).to.have.property('editedOn');\r",
+							"    pm.expect(target[0]).to.have.property('id');\r",
+							"    pm.expect(target[0]).to.have.property('text');\r",
+							"    pm.expect(target[0]).to.have.property('author');\r",
+							"    pm.expect(target[0]).to.have.property('eventId');\r",
+							"    pm.expect(target[0]).to.have.property('createdOn');\r",
+							"    pm.expect(target[0]).to.have.property('editedOn');\r",
 							"});\r",
 							"\r",
 							"pm.test(\"Данные в ответе должны соответствовать данным в запросе\", function () {\r",
@@ -318,11 +325,6 @@
 			"request": {
 				"method": "GET",
 				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "text"
-					},
 					{
 						"key": "Accept",
 						"value": "application/json",
@@ -381,6 +383,13 @@
 							"let founded;\r",
 							"target.forEach(function(element){if (element.id == source.id) founded = element});\r",
 							"\r",
+							"console.log('source:');\r",
+							"console.log(source);\r",
+							"console.log('target:');\r",
+							"console.log(target);\r",
+							"console.log('founded:');\r",
+							"console.log(founded);\r",
+							"\r",
 							"pm.test(\"Комментарий должен содержать поля: id, text, author, eventId, createdOn, editedOn\", function () {\r",
 							"    pm.expect(target[0]).to.have.property('id');\r",
 							"    pm.expect(target[0]).to.have.property('text');\r",
@@ -444,11 +453,6 @@
 			"request": {
 				"method": "GET",
 				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "text"
-					},
 					{
 						"key": "Accept",
 						"value": "application/json",
@@ -503,6 +507,13 @@
 							"let founded;\r",
 							"target.forEach(function(element){if (element.id == source.id) founded = element});\r",
 							"\r",
+							"console.log('source:');\r",
+							"console.log(source);\r",
+							"console.log('target:');\r",
+							"console.log(target);\r",
+							"console.log('founded:');\r",
+							"console.log(founded);\r",
+							"\r",
 							"pm.test(\"Комментарий должен содержать поля: id, text, author, eventId, createdOn, editedOn\", function () {\r",
 							"    pm.expect(target[0]).to.have.property('id');\r",
 							"    pm.expect(target[0]).to.have.property('text');\r",
@@ -566,11 +577,6 @@
 			"request": {
 				"method": "GET",
 				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "text"
-					},
 					{
 						"key": "Accept",
 						"value": "application/json",
@@ -618,6 +624,13 @@
 							"let founded;\r",
 							"target.forEach(function(element){if (element.id == source.id) founded = element});\r",
 							"\r",
+							"console.log('source:');\r",
+							"console.log(source);\r",
+							"console.log('target:');\r",
+							"console.log(target);\r",
+							"console.log('founded:');\r",
+							"console.log(founded);\r",
+							"\r",
 							"pm.test(\"Комментарий должен содержать поля: id, text, author, eventId, createdOn, editedOn\", function () {\r",
 							"    pm.expect(target[0]).to.have.property('id');\r",
 							"    pm.expect(target[0]).to.have.property('text');\r",
@@ -682,11 +695,6 @@
 				"method": "GET",
 				"header": [
 					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "text"
-					},
-					{
 						"key": "Accept",
 						"value": "application/json",
 						"type": "text"
@@ -733,6 +741,11 @@
 							"\r",
 							"const source = pm.collectionVariables.get('response');\r",
 							"const target = pm.response.json();\r",
+							"\r",
+							"console.log('source:');\r",
+							"console.log(source);\r",
+							"console.log('target:');\r",
+							"console.log(target);\r",
 							"\r",
 							"pm.test(\"Комментарий должен содержать поля: id, text, author, eventId, createdOn, editedOn\", function () {\r",
 							"    pm.expect(target).to.have.property('id');\r",
@@ -797,11 +810,6 @@
 			"request": {
 				"method": "GET",
 				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "text"
-					},
 					{
 						"key": "Accept",
 						"value": "application/json",
