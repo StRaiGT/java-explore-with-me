@@ -1,5 +1,6 @@
 package ru.practicum.main_service.comment;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -8,6 +9,8 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -45,6 +48,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class CommentServiceTest {
     @Mock
     private UserService userService;
@@ -193,14 +197,22 @@ public class CommentServiceTest {
             .editedOn(comment3.getEditedOn())
             .build();
 
+    @BeforeEach
+    public void beforeEach() {
+        when(userService.getUserById(user1.getId())).thenReturn(user1);
+        when(userService.getUserById(user2.getId())).thenReturn(user2);
+        when(eventService.getEventById(event1.getId())).thenReturn(event1);
+        when(eventService.getEventById(event3.getId())).thenReturn(event3);
+        when(commentMapper.toCommentDto(comment1)).thenReturn(commentDto1);
+        when(commentMapper.toCommentDto(comment2)).thenReturn(commentDto2);
+        when(commentMapper.toCommentDto(comment3)).thenReturn(commentDto3);
+    }
+
     @Nested
     class GetCommentsByAdmin {
         @Test
         public void shouldGet() {
             when(commentRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(comment1, comment2, comment3)));
-            when(commentMapper.toCommentDto(comment1)).thenReturn(commentDto1);
-            when(commentMapper.toCommentDto(comment2)).thenReturn(commentDto2);
-            when(commentMapper.toCommentDto(comment3)).thenReturn(commentDto3);
 
             List<CommentDto> commentsFromService = commentService.getCommentsByAdmin(pageable);
 
@@ -240,12 +252,8 @@ public class CommentServiceTest {
     class GetCommentsByPrivate {
         @Test
         public void shouldGetIfEventNotNull() {
-            when(userService.getUserById(user1.getId())).thenReturn(user1);
-            when(eventService.getEventById(event1.getId())).thenReturn(event1);
             when(commentRepository.findAllByAuthorIdAndEventId(user1.getId(), event1.getId()))
                     .thenReturn(List.of(comment1, comment2));
-            when(commentMapper.toCommentDto(comment1)).thenReturn(commentDto1);
-            when(commentMapper.toCommentDto(comment2)).thenReturn(commentDto2);
 
             List<CommentDto> commentsFromService = commentService.getCommentsByPrivate(user1.getId(), event1.getId(),
                     pageable);
@@ -266,8 +274,6 @@ public class CommentServiceTest {
 
         @Test
         public void shouldGetEmptyIfEventNotNull() {
-            when(userService.getUserById(user1.getId())).thenReturn(user1);
-            when(eventService.getEventById(event1.getId())).thenReturn(event1);
             when(commentRepository.findAllByAuthorIdAndEventId(user1.getId(), event1.getId())).thenReturn(List.of());
 
             List<CommentDto> commentsFromService = commentService.getCommentsByPrivate(user1.getId(), event1.getId(),
@@ -282,11 +288,7 @@ public class CommentServiceTest {
 
         @Test
         public void shouldGetIfEventIsNull() {
-            when(userService.getUserById(user1.getId())).thenReturn(user1);
             when(commentRepository.findAllByAuthorId(user1.getId())).thenReturn(List.of(comment1, comment2, comment3));
-            when(commentMapper.toCommentDto(comment1)).thenReturn(commentDto1);
-            when(commentMapper.toCommentDto(comment2)).thenReturn(commentDto2);
-            when(commentMapper.toCommentDto(comment3)).thenReturn(commentDto3);
 
             List<CommentDto> commentsFromService = commentService.getCommentsByPrivate(user1.getId(), null,
                     pageable);
@@ -311,10 +313,7 @@ public class CommentServiceTest {
     class CreateByPrivate {
         @Test
         public void shouldCreate() {
-            when(userService.getUserById(user1.getId())).thenReturn(user1);
-            when(eventService.getEventById(event1.getId())).thenReturn(event1);
             when(commentRepository.save(any())).thenReturn(comment1);
-            when(commentMapper.toCommentDto(comment1)).thenReturn(commentDto1);
 
             CommentDto commentFromService = commentService.createByPrivate(user1.getId(), event1.getId(), newCommentDto);
 
@@ -337,9 +336,6 @@ public class CommentServiceTest {
 
         @Test
         public void shouldThrowExceptionIfEventNotPublished() {
-            when(userService.getUserById(user1.getId())).thenReturn(user1);
-            when(eventService.getEventById(event3.getId())).thenReturn(event3);
-
             ForbiddenException exception = assertThrows(ForbiddenException.class,
                     () -> commentService.createByPrivate(user1.getId(), event3.getId(), newCommentDto));
             assertEquals("Создавать комментарии можно только к опубликованным событиям.", exception.getMessage());
@@ -354,10 +350,8 @@ public class CommentServiceTest {
     class PatchByPrivate {
         @Test
         public void shouldPatch() {
-            when(userService.getUserById(user1.getId())).thenReturn(user1);
             when(commentRepository.findById(comment3.getId())).thenReturn(Optional.of(comment3));
             when(commentRepository.save(any())).thenReturn(comment3);
-            when(commentMapper.toCommentDto(comment3)).thenReturn(commentDto3);
 
             CommentDto commentFromService = commentService.patchByPrivate(user1.getId(), comment3.getId(), newCommentDtoToUpdate);
 
@@ -380,7 +374,6 @@ public class CommentServiceTest {
 
         @Test
         public void shouldThrowExceptionIfCommentNotFound() {
-            when(userService.getUserById(user1.getId())).thenReturn(user1);
             when(commentRepository.findById(comment3.getId())).thenReturn(Optional.empty());
 
             NotFoundException exception = assertThrows(NotFoundException.class,
@@ -394,7 +387,6 @@ public class CommentServiceTest {
 
         @Test
         public void shouldThrowExceptionIfUserNotCommentOwner() {
-            when(userService.getUserById(user2.getId())).thenReturn(user2);
             when(commentRepository.findById(comment3.getId())).thenReturn(Optional.of(comment3));
 
             ForbiddenException exception = assertThrows(ForbiddenException.class,
@@ -411,7 +403,6 @@ public class CommentServiceTest {
     class DeleteByPrivate {
         @Test
         public void shouldDelete() {
-            when(userService.getUserById(user1.getId())).thenReturn(user1);
             when(commentRepository.findById(comment1.getId())).thenReturn(Optional.of(comment1));
 
             commentService.deleteByPrivate(user1.getId(), comment1.getId());
@@ -423,7 +414,6 @@ public class CommentServiceTest {
 
         @Test
         public void shouldThrowExceptionIfCommentNotFound() {
-            when(userService.getUserById(user1.getId())).thenReturn(user1);
             when(commentRepository.findById(comment1.getId())).thenReturn(Optional.empty());
 
             NotFoundException exception = assertThrows(NotFoundException.class,
@@ -437,7 +427,6 @@ public class CommentServiceTest {
 
         @Test
         public void shouldThrowExceptionIfUserNotCommentOwner() {
-            when(userService.getUserById(user2.getId())).thenReturn(user2);
             when(commentRepository.findById(comment1.getId())).thenReturn(Optional.of(comment1));
 
             ForbiddenException exception = assertThrows(ForbiddenException.class,
@@ -454,11 +443,7 @@ public class CommentServiceTest {
     class GetCommentsByPublic {
         @Test
         public void shouldGet() {
-            when(eventService.getEventById(event1.getId())).thenReturn(event1);
             when(commentRepository.findAllByEventId(event1.getId(), pageable)).thenReturn(List.of(comment1, comment2, comment3));
-            when(commentMapper.toCommentDto(comment1)).thenReturn(commentDto1);
-            when(commentMapper.toCommentDto(comment2)).thenReturn(commentDto2);
-            when(commentMapper.toCommentDto(comment3)).thenReturn(commentDto3);
 
             List<CommentDto> commentsFromService = commentService.getCommentsByPublic(event1.getId(), pageable);
 
@@ -479,7 +464,6 @@ public class CommentServiceTest {
 
         @Test
         public void shouldGetEmpty() {
-            when(eventService.getEventById(event1.getId())).thenReturn(event1);
             when(commentRepository.findAllByEventId(event1.getId(), pageable)).thenReturn(List.of());
 
             List<CommentDto> commentsFromService = commentService.getCommentsByPublic(event1.getId(), pageable);
@@ -496,7 +480,6 @@ public class CommentServiceTest {
         @Test
         public void shouldGet() {
             when(commentRepository.findById(comment1.getId())).thenReturn(Optional.of(comment1));
-            when(commentMapper.toCommentDto(comment1)).thenReturn(commentDto1);
 
             CommentDto commentFromService = commentService.getCommentByPublic(comment1.getId());
 

@@ -7,7 +7,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.practicum.main_service.comment.dto.CommentDto;
-import ru.practicum.main_service.comment.dto.NewCommentDto;
 import ru.practicum.main_service.comment.mapper.CommentMapperImpl;
 import ru.practicum.main_service.comment.model.Comment;
 import ru.practicum.main_service.event.model.Event;
@@ -44,9 +43,6 @@ public class CommentMapperTest {
     private final Event event = Event.builder()
             .id(1L)
             .build();
-    private final NewCommentDto newCommentDto = NewCommentDto.builder()
-            .text("test text")
-            .build();
     private final Comment comment = Comment.builder()
             .id(1L)
             .author(user)
@@ -62,27 +58,6 @@ public class CommentMapperTest {
             .createdOn(comment.getCreatedOn())
             .editedOn(comment.getEditedOn())
             .build();
-
-    @Nested
-    class ToComment {
-        @Test
-        public void shouldReturnComment() {
-            Comment result = commentMapper.toComment(newCommentDto, user, event, comment.getCreatedOn());
-
-            assertNull(result.getId());
-            assertNull(result.getEditedOn());
-            assertEquals(comment.getAuthor().getId(), result.getAuthor().getId());
-            assertEquals(comment.getEvent().getId(), result.getEvent().getId());
-            assertEquals(comment.getCreatedOn(), result.getCreatedOn());
-        }
-
-        @Test
-        public void shouldReturnNull() {
-            Comment result = commentMapper.toComment(null, null, null, null);
-
-            assertNull(result);
-        }
-    }
 
     @Nested
     class ToCommentDto {
